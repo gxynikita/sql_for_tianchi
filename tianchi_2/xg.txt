@@ -1,0 +1,37 @@
+-- -- train
+-- PAI
+-- -name xgboost
+-- -project algo_public
+-- -Deta="0.1"
+-- -Dobjective="reg:linear"
+-- -DitemDelimiter=","
+-- -Dseed="0"
+-- -Dnum_round="500"
+-- -DlabelColName="trend"
+-- -DinputTableName="train_trend_3_enc"
+-- -DenableSparse="false"
+-- -Dmax_depth="10"
+-- -Dsubsample="0.7"
+-- -Dcolsample_bytree="0.7"
+-- -DmodelName="xgboost_3_only_01"
+-- -DfeatureColNames="_
+-- -Dgamma="0"
+-- -Dlambda="50" 
+-- -DkvDelimiter=":";
+
+-- -- predict
+-- PAI
+-- -name prediction
+-- -project algo_public
+-- -DdetailColName="trend"
+-- -DappendColNames="city_id,province_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_quantity"
+-- -DmodelName="xgboost_3_only_01"
+-- -DitemDelimiter=","
+-- -DresultColName="prediction_result"
+-- -Dlifecycle="28"
+-- -DoutputTableName="xgb_pred_3_only_01"
+-- -DscoreColName="prediction_score"
+-- -DkvDelimiter=":"
+-- -DinputTableName="test_trend_3_enc_new"
+-- -DfeatureColNames=
+-- -DenableSparse="false";

@@ -1,0 +1,44 @@
+-- 以下只针对4706个缺省值，与一月份数据进行更新，其中拥有201501的calss_id直接填入
+-- drop table if exists loss_4706_201501;
+-- create table loss_4706_201501 as select t.*,yc_result_submit_a.predict_quantity as sale_1
+-- from (select *from  loss_4706_1 where sale_date = 201501) as t  join yc_result_submit_a 
+-- on yc_result_submit_a.class_id = t.class_id
+-- and yc_result_submit_a.city_id = t.city_id;
+ 
+-- 插入201501的数据
+-- drop table if exists o2m_simiar_city_sale_final_1;
+-- create table o2m_simiar_city_sale_final_1 as 
+-- select o2m_simiar_city_sale_final.predict_date,o2m_simiar_city_sale_final.province_id,o2m_simiar_city_sale_final.city_id,o2m_simiar_city_sale_final.class_id,
+-- if(o2m_simiar_city_sale_final.predict_quantity is null,loss_4706_201501.sale,o2m_simiar_city_sale_final.predict_quantity)as predict_quantity 
+-- from o2m_simiar_city_sale_final left join  loss_4706_201501
+-- on o2m_simiar_city_sale_final.city_id = loss_4706_201501.city_id
+-- and  o2m_simiar_city_sale_final.class_id = loss_4706_201501.class_id;
+-- select count(*) from o2m_simiar_city_sale_final_1 where predict_quantity is NULL;
+
+-- 处理剩下的3065个数据,只针对拥有每年1月份销售的数据
+-- drop table if exists loss_4706_all_01;
+-- create table loss_4706_all_01 as
+-- select class_id,city_id,(avg(sale)) as sale from loss_4706_1 
+-- where sale_date like '%01'
+-- group by class_id,city_id;
+
+-- 插入拥有一月份的城市的销量
+-- insert overwrite table o2m_simiar_city_sale_final_1 
+-- select o2m_simiar_city_sale_final_1.predict_date,o2m_simiar_city_sale_final_1.province_id,o2m_simiar_city_sale_final_1.city_id,o2m_simiar_city_sale_final_1.class_id,
+-- if(o2m_simiar_city_sale_final_1.predict_quantity is null,loss_4706_all_01.sale,o2m_simiar_city_sale_final_1.predict_quantity)as predict_quantity 
+-- from o2m_simiar_city_sale_final_1 left join  loss_4706_all_01
+-- on o2m_simiar_city_sale_final_1.city_id = loss_4706_all_01.city_id
+-- and  o2m_simiar_city_sale_final_1.class_id = loss_4706_all_01.class_id;
+-- select count(*) from o2m_simiar_city_sale_final_1 where predict_quantity is NULL;
+
+-- 剩下1344个数据，决定还是按照test3的方式缺失class_id对应的各个城市的平均值
+-- insert overwrite  table o2m_simiar_city_sale_final_1 
+-- select o2m_simiar_city_sale_final_1.predict_date,o2m_simiar_city_sale_final_1.province_id,o2m_simiar_city_sale_final_1.city_id,o2m_simiar_city_sale_final_1.class_id,
+-- if(o2m_simiar_city_sale_final_1.predict_quantity is null,loss_4706_2.predict_quantity,o2m_simiar_city_sale_final_1.predict_quantity)as predict_quantity 
+-- from o2m_simiar_city_sale_final_1 left join loss_4706_2 
+-- on o2m_simiar_city_sale_final_1.city_id = loss_4706_2.city_id
+-- and  o2m_simiar_city_sale_final_1.class_id = loss_4706_2.class_id;
+
+-- select count(*) from o2m_simiar_city_sale_final_1 WHERE predict_quantity is NULL ; 
+drop table if exists yc_result_submit_a;
+alter table o2m_simiar_city_sale_final_1 rename to yc_result_submit_a;

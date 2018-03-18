@@ -1,0 +1,45 @@
+-- 查找所有城市的缺失部分，并用缺失部分找到所有拥有缺失部分的其他城市
+-- drop table if exists simiar_city;
+-- create table simiar_city as select loss_all_1.city_id,loss_all_1.class_id,yc_passenger_car_sales.city_id as sell_city_id
+-- from loss_all_1 left join yc_passenger_car_sales on yc_passenger_car_sales.class_id = loss_all_1.class_id;
+-- create table loss_all_1 as select distinct * from loss_all  where predict_quantity is NULL 
+-- 
+-- 找到城市缺失，1对1。
+-- drop  table o2o;
+-- drop table if exists o2o_simiar_city;
+-- create table o2o_simiar_city as select city_id,class_id,min(sell_city_id) as sell_city_id from simiar_city group by city_id,class_id
+
+-- 找到对应城市卖缺失部分class_id最早的日期
+-- create table o2o_simiar_city_date as select o2o_simiar_city.* ,(min(yc_passenger_car_sales.sale_date)) as start_sale_date_1
+-- from o2o_simiar_city,yc_passenger_car_sales 
+-- where yc_passenger_car_sales.city_id = o2o_simiar_city.sell_city_id
+-- and  yc_passenger_car_sales.class_id = o2o_simiar_city.class_id
+-- group by o2o_simiar_city.city_id,o2o_simiar_city.class_id,o2o_simiar_city.sell_city_id;
+
+-- 找到对应城市最早卖缺失部分的销量
+-- create table o2o_simiar_city_sale as 
+-- select o2o_simiar_city_date.*,sum(yc_passenger_car_sales.sale_quantity) as start_sale
+-- from o2o_simiar_city_date,yc_passenger_car_sales
+-- where yc_passenger_car_sales.city_id = o2o_simiar_city_date.sell_city_id
+-- and  yc_passenger_car_sales.class_id = o2o_simiar_city_date.class_id
+-- and yc_passenger_car_sales.sale_date = o2o_simiar_city_date.start_sale_date_1
+-- group by o2o_simiar_city_date.city_id,o2o_simiar_city_date.class_id,o2o_simiar_city_date.sell_city_id,o2o_simiar_city_date.start_sale_date_1;
+
+-- 填充1510个空值
+-- drop table if exists o2o_simiar_city_sale_final;
+-- create table o2o_simiar_city_sale_final as 
+-- select sample_submit_final_final.predict_date,sample_submit_final_final.province_id,sample_submit_final_final.city_id,sample_submit_final_final.class_id,if(sample_submit_final_final.sale_quantity is null,o2o_simiar_city_sale.start_sale,sample_submit_final_final.sale_quantity)as predict_quantity 
+-- from sample_submit_final_final left join o2o_simiar_city_sale
+-- on sample_submit_final_final.city_id = o2o_simiar_city_sale.city_id
+-- and  sample_submit_final_final.class_id = o2o_simiar_city_sale.class_id;
+
+--填充剩下的3196个空值
+-- drop table if exists yc_result_submit_a;
+-- create table  yc_result_submit_a as select sample_submit_final_final.predict_date ,sample_submit_final_final.province_id ,sample_submit_final_final.city_id ,sample_submit_final_final.class_id ,1.1*(if(sample_submit_final_final.sale_quantity is null,if(o2o_simiar_city_sale_final.predict_quantity 
+-- is null,30,o2o_simiar_city_sale_final.predict_quantity),sample_submit_final_final.sale_quantity))
+-- as predict_quantity from sample_submit_final_final left join o2o_simiar_city_sale_final on sample_submit_final_final.province_id = o2o_simiar_city_sale_final.province_id and sample_submit_final_final.city_id = o2o_simiar_city_sale_final.city_id and
+-- sample_submit_final_final.class_id = o2o_simiar_city_sale_final.class_id;
+
+-- select count(*) from yc_result_sample_a;
+-- select count(*) from yc_result_submit_a where predict_quantity is null;
+-- select count(*) from yc_result_submit_a;

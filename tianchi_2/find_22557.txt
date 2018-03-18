@@ -1,0 +1,283 @@
+----找到那一部分22557的class_id,表为loss_class_id.
+drop table if exists loss_class_id;
+create table loss_class_id as select * from result_pro where predict_number is null;
+
+----在原始数据中找到大于201708的数据
+drop table if exists  first_data;
+create table first_data as select * from class_converge where sale_date > 201708;
+
+----找到所有我们要找的class_id的所有对应日期的data
+drop table if exists  data_201709;
+create table data_201709 as select * from class_converge where sale_date = 201709;
+drop table if exists  data_201710;
+create table data_201710 as select * from class_converge where sale_date = 201710;
+drop table if exists  data_201711;
+create table data_201711 as select * from class_converge where sale_date = 201711;
+drop table if exists  data_201712;
+create table data_201712 as select * from class_converge where sale_date = 201712;
+
+----找到22557条与不同日期对应的class_id
+--201709有5513条
+drop table if exists class_id_date_201709;
+create table class_id_date_201709 as select loss_class_id.class_id,loss_class_id.city_id,
+data_201709.sale_date,data_201709.sale_number
+from loss_class_id left join data_201709 
+on data_201709.class_id = loss_class_id.class_id
+and data_201709.city_id = loss_class_id.city_id;
+
+drop table if exists class_id_date_201709_1;
+create table class_id_date_201709_1 as select * from class_id_date_201709 where sale_number is not null; 
+-- select count(*) from  class_id_date_201709_1;
+--没有201709的17044
+drop table if exists class_id_date_201709_0;
+create table class_id_date_201709_0 as select * from class_id_date_201709 where sale_number is null;
+-- select count(*) from  class_id_date_201709_0;
+
+
+----201710有9068条
+drop table if exists class_id_date_201710;
+create table class_id_date_201710 as select loss_class_id.class_id,loss_class_id.city_id,
+data_201710.sale_date,data_201710.sale_number
+from loss_class_id left join data_201710 
+on data_201710.class_id = loss_class_id.class_id
+and data_201710.city_id = loss_class_id.city_id;
+drop table if exists class_id_date_201710_1;
+create table class_id_date_201710_1 as select * from class_id_date_201710 where sale_number is not null;
+-- select count(*) from  class_id_date_201710;
+-- 没有201710条的
+drop table if exists class_id_date_201710_0;
+create table class_id_date_201710_0 as select * from class_id_date_201710 where sale_number is null; 
+
+
+----201711有11617条
+drop table if exists class_id_date_201711;
+create table class_id_date_201711 as select loss_class_id.class_id,loss_class_id.city_id,
+data_201711.sale_date,data_201711.sale_number
+from loss_class_id left join data_201711 
+on data_201711.class_id = loss_class_id.class_id
+and data_201711.city_id = loss_class_id.city_id;
+drop table if exists class_id_date_201711_1;
+create table class_id_date_201711_1 as select * from class_id_date_201711 where sale_number is not null;
+-- select count(*) from  class_id_date_201711;
+---没有201711的
+drop table if exists class_id_no_date_201711_0;
+create table class_id_date_201711_0 as select * from class_id_date_201711 where sale_number is null; 
+
+
+----201712有12386条
+drop table if exists class_id_date_201712;
+create table class_id_date_201712 as select loss_class_id.class_id,loss_class_id.city_id,
+data_201712.sale_date,data_201712.sale_number
+from loss_class_id left join data_201712 
+on data_201712.class_id = loss_class_id.class_id
+and data_201712.city_id = loss_class_id.city_id;
+drop table if exists class_id_date_201712_1;
+create table class_id_date_201712_1 as select * from class_id_date_201712 where sale_number is not null;
+-- select count(*) from  class_id_date_201712;
+-- 没有的201712的
+drop table if exists class_id_no_date_201712_0;
+create table class_id_date_201712_0 as select * from class_id_date_201712 where sale_number is null;
+
+
+
+----找到表0111的满足(10,11,12)合计3874条
+drop table if exists tb_0111;
+create table tb_0111 as select class_id_date_201712_1.class_id,class_id_date_201712_1.city_id
+from class_id_date_201712_1,class_id_date_201711_1,class_id_date_201710_1,class_id_date_201709_0
+where class_id_date_201712_1.class_id = class_id_date_201711_1.class_id
+and class_id_date_201712_1.class_id = class_id_date_201710_1.class_id
+and class_id_date_201712_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201712_1.city_id = class_id_date_201711_1.city_id
+and class_id_date_201712_1.city_id = class_id_date_201710_1.city_id
+and class_id_date_201712_1.city_id = class_id_date_201709_0.city_id;
+select count(*) from tb_0111; 
+
+---找到1110(9,10,11)的合计1676
+drop table if exists tb_1110;
+create table tb_1110 as select class_id_date_201711_1.class_id,class_id_date_201711_1.city_id
+from class_id_date_201709_1,class_id_date_201711_1,class_id_date_201710_1,class_id_date_201712_0
+where class_id_date_201711_1.class_id = class_id_date_201709_1.class_id
+and class_id_date_201711_1.class_id = class_id_date_201710_1.class_id
+and class_id_date_201711_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201711_1.city_id = class_id_date_201709_1.city_id
+and class_id_date_201711_1.city_id = class_id_date_201710_1.city_id
+and class_id_date_201711_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_1110; 
+
+---找到0011(11,12)合计3373
+drop table if exists tb_0011;
+create table tb_0011 as select class_id_date_201711_1.class_id,class_id_date_201711_1.city_id
+from class_id_date_201709_0,class_id_date_201711_1,class_id_date_201710_0,class_id_date_201712_1
+where class_id_date_201711_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201711_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201711_1.class_id = class_id_date_201712_1.class_id
+and class_id_date_201711_1.city_id = class_id_date_201709_0.city_id
+and class_id_date_201711_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201711_1.city_id = class_id_date_201712_1.city_id;
+select count(*) from tb_0011;  
+
+---找到0110(10,11)合计665
+drop table if exists tb_0110;
+create table tb_0110 as select class_id_date_201711_1.class_id,class_id_date_201711_1.city_id
+from class_id_date_201709_0,class_id_date_201711_1,class_id_date_201710_1,class_id_date_201712_0
+where class_id_date_201711_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201711_1.class_id = class_id_date_201710_1.class_id
+and class_id_date_201711_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201711_1.city_id = class_id_date_201709_0.city_id
+and class_id_date_201711_1.city_id = class_id_date_201710_1.city_id
+and class_id_date_201711_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_0110; 
+
+--找到1001(9,12)合计1067
+drop table if exists tb_1001;
+create table tb_1001 as select class_id_date_201712_1.class_id,class_id_date_201712_1.city_id
+from class_id_date_201709_1,class_id_date_201712_1,class_id_date_201710_0,class_id_date_201711_0
+where class_id_date_201712_1.class_id = class_id_date_201709_1.class_id
+and class_id_date_201712_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201712_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201712_1.city_id = class_id_date_201709_1.city_id
+and class_id_date_201712_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201712_1.city_id = class_id_date_201711_0.city_id;
+select count(*) from tb_1001; 
+
+---找到1100(9,10)合计762
+drop table if exists tb_1100;
+create table tb_1100 as select class_id_date_201709_1.class_id,class_id_date_201709_1.city_id
+from class_id_date_201709_1,class_id_date_201711_0,class_id_date_201710_1,class_id_date_201712_0
+where class_id_date_201709_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201709_1.class_id = class_id_date_201710_1.class_id
+and class_id_date_201709_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201709_1.city_id = class_id_date_201711_0.city_id
+and class_id_date_201709_1.city_id = class_id_date_201710_1.city_id
+and class_id_date_201709_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_1100; 
+
+--找到0001(12)合计2598
+drop table if exists tb_0001;
+create table tb_0001 as select class_id_date_201712_1.class_id,class_id_date_201712_1.city_id
+from class_id_date_201709_0,class_id_date_201712_1,class_id_date_201710_0,class_id_date_201711_0
+where class_id_date_201712_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201712_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201712_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201712_1.city_id = class_id_date_201709_0.city_id
+and class_id_date_201712_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201712_1.city_id = class_id_date_201711_0.city_id;
+select count(*) from tb_0001; 
+
+--找到1000(9)合计798
+drop table if exists tb_1000;
+create table tb_1000 as select class_id_date_201709_1.class_id,class_id_date_201709_1.city_id
+from class_id_date_201709_1,class_id_date_201711_0,class_id_date_201710_0,class_id_date_201712_0
+where class_id_date_201709_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201709_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201709_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201709_1.city_id = class_id_date_201711_0.city_id
+and class_id_date_201709_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201709_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_1000; 
+
+--找到0101(10,12)合计967
+drop table if exists tb_0101;
+create table tb_0101 as select class_id_date_201710_1.class_id,class_id_date_201710_1.city_id
+from class_id_date_201712_1,class_id_date_201710_1,class_id_date_201711_0,class_id_date_201709_0
+where class_id_date_201710_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201710_1.class_id = class_id_date_201712_1.class_id
+and class_id_date_201710_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201710_1.city_id = class_id_date_201711_0.city_id
+and class_id_date_201710_1.city_id = class_id_date_201709_0.city_id
+and class_id_date_201710_1.city_id = class_id_date_201712_1.city_id;
+select count(*) from tb_0101; 
+
+---找到0010(11)共计911
+drop table if exists tb_0010;
+create table tb_0010 as select class_id_date_201711_1.class_id,class_id_date_201711_1.city_id
+from class_id_date_201711_1,class_id_date_201709_0,class_id_date_201710_0,class_id_date_201712_0
+where class_id_date_201711_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201711_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201711_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201711_1.city_id = class_id_date_201709_0.city_id
+and class_id_date_201711_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201711_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_0010; 
+
+--找到0100(10)共计748
+drop table if exists tb_0100;
+create table tb_0100 as select class_id_date_201710_1.class_id,class_id_date_201710_1.city_id
+from class_id_date_201710_1,class_id_date_201711_0,class_id_date_201709_0,class_id_date_201712_0
+where class_id_date_201710_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201710_1.class_id = class_id_date_201709_0.class_id
+and class_id_date_201710_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201710_1.city_id = class_id_date_201711_0.city_id
+and class_id_date_201710_1.city_id = class_id_date_201709_0.city_id
+and class_id_date_201710_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_0100; 
+
+---1010(9,11)合计703
+drop table if exists tb_1010;
+create table tb_1010 as select class_id_date_201711_1.class_id,class_id_date_201711_1.city_id
+from class_id_date_201711_1,class_id_date_201709_1,class_id_date_201710_0,class_id_date_201712_0
+where class_id_date_201711_1.class_id = class_id_date_201709_1.class_id
+and class_id_date_201711_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201711_1.class_id = class_id_date_201712_0.class_id
+and class_id_date_201711_1.city_id = class_id_date_201709_1.city_id
+and class_id_date_201711_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201711_1.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_1010; 
+
+--0000(null)合计3908
+drop table if exists tb_0000;
+create table tb_0000 as select class_id_date_201709_0.class_id,class_id_date_201709_0.city_id
+from class_id_date_201712_0,class_id_date_201709_0,class_id_date_201710_0,class_id_date_201711_0
+where class_id_date_201709_0.class_id = class_id_date_201711_0.class_id
+and class_id_date_201709_0.class_id = class_id_date_201712_0.class_id
+and class_id_date_201709_0.class_id = class_id_date_201710_0.class_id
+and class_id_date_201709_0.city_id = class_id_date_201711_0.city_id
+and class_id_date_201709_0.city_id = class_id_date_201710_0.city_id
+and class_id_date_201709_0.city_id = class_id_date_201712_0.city_id;
+select count(*) from tb_0000;
+
+---缺失数据1101(9,10,12)合计 92
+drop table if exists tb_1101;
+create table tb_1101 as select class_id_date_201709_1.class_id,class_id_date_201709_1.city_id
+from class_id_date_201712_1,class_id_date_201709_1,class_id_date_201710_1,class_id_date_201711_0
+where class_id_date_201709_1.class_id = class_id_date_201711_0.class_id
+and class_id_date_201709_1.class_id = class_id_date_201712_1.class_id
+and class_id_date_201709_1.class_id = class_id_date_201710_1.class_id
+and class_id_date_201709_1.city_id = class_id_date_201711_0.city_id
+and class_id_date_201709_1.city_id = class_id_date_201710_1.city_id
+and class_id_date_201709_1.city_id = class_id_date_201712_1.city_id;
+select count(*) from tb_1101;
+
+---缺失数据1011(9,11,12)合计131
+drop table if exists tb_1011;
+create table tb_1011 as select class_id_date_201709_1.class_id,class_id_date_201709_1.city_id
+from class_id_date_201712_1,class_id_date_201709_1,class_id_date_201710_0,class_id_date_201711_1
+where class_id_date_201709_1.class_id = class_id_date_201711_1.class_id
+and class_id_date_201709_1.class_id = class_id_date_201712_1.class_id
+and class_id_date_201709_1.class_id = class_id_date_201710_0.class_id
+and class_id_date_201709_1.city_id = class_id_date_201711_1.city_id
+and class_id_date_201709_1.city_id = class_id_date_201710_0.city_id
+and class_id_date_201709_1.city_id = class_id_date_201712_1.city_id;
+select count(*) from tb_1011;
+
+--缺失数据1111(9,10,11,12)合计284
+drop table if exists tb_1111;
+create table tb_1111 as select class_id_date_201709_1.class_id,class_id_date_201709_1.city_id
+from class_id_date_201712_1,class_id_date_201709_1,class_id_date_201710_1,class_id_date_201711_1
+where class_id_date_201709_1.class_id = class_id_date_201711_1.class_id
+and class_id_date_201709_1.class_id = class_id_date_201712_1.class_id
+and class_id_date_201709_1.class_id = class_id_date_201710_1.class_id
+and class_id_date_201709_1.city_id = class_id_date_201711_1.city_id
+and class_id_date_201709_1.city_id = class_id_date_201710_1.city_id
+and class_id_date_201709_1.city_id = class_id_date_201712_1.city_id;
+select count(*) from tb_1111;
+
+
+
+drop table if exists  all_tb;
+create table all_tb as select *  from 
+(select * from tb_0000  union all select * from tb_0111  union all select * from tb_1110 
+union all select * from tb_0011 union all select * from tb_0110  union all select * from tb_1100 
+union all select * from tb_1001  union all select * from tb_0001  union all select * from tb_1000 
+union all select * from tb_0101 union all select * from tb_0010 union select * from tb_0100  union 
+select * from tb_1010) as t;

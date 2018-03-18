@@ -1,0 +1,40 @@
+----此段为了查找整个数据只有201711和201712月的数据，可以承接同一目录下的fill_all_data脚本。data_no_xgboost_2就是从上个脚本上来的。
+-- drop table if exists tb_1;
+-- create table tb_1 as select 
+-- city_id,class_id,count(sale_date) as num from data_no_xgboost_2 
+-- group by city_id,class_id;
+-- drop table if exists tb_2;
+-- create table tb_2 as 
+-- select * from tb_1 where num =2;
+
+
+-- drop table if exists tb_3;
+-- create table tb_3
+-- as select data_no_xgboost_2.* from data_no_xgboost_2 
+-- where sale_date > 201710;
+-- drop table if exists tb_4;
+-- create table tb_4 as select 
+-- city_id,class_id,count(sale_date) as num 
+-- from tb_3 group by city_id,class_id;
+-- drop table  if exists tb_5;
+-- create table tb_5 as select * from tb_4
+-- where num =2;
+-- drop table if exists  tb_6;
+-- create table tb_6 as select tb_5.*
+-- from tb_5,tb_2 
+-- where tb_5.city_id =tb_2.city_id 
+-- and tb_5.class_id = tb_2.class_id;
+
+-- drop table if exists tb_only_11_12;
+-- create table tb_only_11_12  as select 
+-- data_no_xgboost_2.* from data_no_xgboost_2,tb_6
+-- where data_no_xgboost_2.class_id = tb_6.class_id
+-- and data_no_xgboost_2.city_id = tb_6.city_id;
+
+-- drop table tb_1;
+-- drop table tb_2 ;
+-- drop table tb_3 ;
+-- drop table tb_4 ;
+-- drop table tb_5;
+-- drop table tb_6; 
+

@@ -1,0 +1,63 @@
+-- create table if not exists  yc_passenger_car_sales as select * from odps_tc_257100_f673506e024.yc_passenger_car_sales;
+-- create table if not exists  yc_passenger_car_yields as select * from odps_tc_257100_f673506e024.yc_passenger_car_yields;
+-- create table if not exists  yc_macro_econ as select * from odps_tc_257100_f673506e024.yc_macro_econ;
+-- create table if not exists  yc_result_sample_a as select * from odps_tc_257100_f673506e024.yc_result_sample_a;
+
+-- drop table if exists class_converge;
+-- create table class_converge as 
+-- select sale_date,province_id,city_id,class_id,brand_id,sum(sale_quantity) as sale_number 
+-- from yc_passenger_car_sales group by sale_date,province_id,city_id,class_id,brand_id;
+
+-- drop table if exists statistic_201612;
+-- drop table if exists statistic_201701;
+-- drop table if exists statistic_201712;
+-- drop table if exists statistic_201711;
+-- drop table if exists statistic_201710;
+-- drop table if exists statistic_201709;
+-- create table statistic_201612 as select * from class_converge where sale_date='201612';
+-- create table statistic_201701 as select * from class_converge where sale_date='201701';
+-- create table statistic_201711 as select * from class_converge where sale_date='201711';
+-- create table statistic_201712 as select * from class_converge where sale_date='201712';
+-- create table statistic_201710 as select * from class_converge where sale_date='201710';
+-- create table statistic_201709 as select * from class_converge where sale_date='201709';
+
+-- drop table if exists trend;
+-- create table trend as select statistic_201701.province_id,statistic_201701.city_id,statistic_201701.class_id,statistic_201701.sale_number/statistic_201612.sale_number as trend from 
+-- statistic_201701 join statistic_201612 on statistic_201701.province_id = statistic_201612.province_id and statistic_201701.city_id = statistic_201612.city_id and
+-- statistic_201701.class_id = statistic_201612.class_id;
+
+-- drop table if exists sample_trend_prepro;
+-- create table sample_trend_prepro as select statistic_201712.province_id,statistic_201712.city_id,statistic_201712.class_id,if((sale_number*trend) is null,sale_number*1,sale_number*trend) as sale_number from 
+-- statistic_201712 left join trend on statistic_201712.province_id = trend.province_id and statistic_201712.city_id = trend.city_id and
+-- statistic_201712.class_id = trend.class_id;
+
+-- drop table if exists sample_submit;
+-- create table sample_submit as select yc_result_sample_a.predict_date ,yc_result_sample_a.province_id ,yc_result_sample_a.city_id ,yc_result_sample_a.class_id ,sample_trend_prepro.sale_number as sale_quantity from yc_result_sample_a left join 
+-- sample_trend_prepro on yc_result_sample_a.province_id = sample_trend_prepro.province_id and yc_result_sample_a.city_id = sample_trend_prepro.city_id and
+-- yc_result_sample_a.class_id = sample_trend_prepro.class_id;
+
+-- drop table if exists sample_submit_final;
+-- create table sample_submit_final as select sample_submit.predict_date ,sample_submit.province_id ,sample_submit.city_id ,sample_submit.class_id ,if(sample_submit.sale_quantity is null,statistic_201711.sale_number,sample_submit.sale_quantity)
+-- as sale_quantity from sample_submit left join statistic_201711 on sample_submit.province_id = statistic_201711.province_id and sample_submit.city_id = statistic_201711.city_id and
+-- sample_submit.class_id = statistic_201711.class_id;
+
+-- drop table if exists sample_submit_final_final;
+-- create table sample_submit_final_final as select sample_submit_final.predict_date ,sample_submit_final.province_id ,sample_submit_final.city_id ,sample_submit_final.class_id ,if(sample_submit_final.sale_quantity is null,statistic_201710.sale_number,sample_submit_final.sale_quantity)
+-- as sale_quantity from sample_submit_final left join statistic_201710 on sample_submit_final.province_id = statistic_201710.province_id and sample_submit_final.city_id = statistic_201710.city_id and
+-- sample_submit_final.class_id = statistic_201710.class_id;
+
+-- drop table if exists class_converge_average;
+-- create table class_converge_average as select province_id,city_id,class_id,brand_id,avg(sale_number) as sale_number from class_converge group by province_id,city_id,class_id,brand_id;
+
+-- drop table if exists yc_result_submit_a;
+-- create table  yc_result_submit_a as select sample_submit_final_final.predict_date ,sample_submit_final_final.province_id ,sample_submit_final_final.city_id ,sample_submit_final_final.class_id ,if(sample_submit_final_final.sale_quantity is null,if(class_converge_average.sale_number is null,30,class_converge_average.sale_number),sample_submit_final_final.sale_quantity)
+-- as predict_quantity from sample_submit_final_final left join class_converge_average on sample_submit_final_final.province_id = class_converge_average.province_id and sample_submit_final_final.city_id = class_converge_average.city_id and
+-- sample_submit_final_final.class_id = class_converge_average.class_id;
+
+
+-- select * from yc_result_sample_a;
+select count(*) from yc_result_submit_a where predict_quantity is null;
+
+
+
+

@@ -1,0 +1,43 @@
+----A.首先找到9，10，11，12有任意一个月
+----1.找到新的车型（这里针对的是2017年1月和8月都没有的）
+drop table if exists new_class_1;
+create table new_class_1 as select * from 
+(select class_id,city_id,min(sale_date) as first_date
+from (select * from class_converge where sale_date > 201612) as t1 group by class_id ,city_id) t2 where first_date >201708;
+
+drop table if exists new_class_2;
+create table new_class_2 as select t.* from (select city_id,class_id,sale_quantity from class_converge where sale_date > 201708) t,new_class_1
+where t.class_id = new_class_1.class_id
+and t.city_id = new_class_1.city_id ;
+
+drop table if exists class_id_9;
+create table class_id_9 as select *,1 as flag from new_class_1 where first_date=201709;  
+drop table if exists class_id_10;
+create table class_id_10 as select *,1 as flag from new_class_1 where first_date = 201710;
+drop table if exists class_id_11;
+create table class_id_11 as select * ,1 as flag from new_class_1 where first_date = 201711;
+drop table if exists class_id_12;
+create table class_id_12  as select *,1 as flag from new_class_1 where first_date = 201712;
+
+drop table if exists table_all;
+create table table_all as select new_class_2.*,class_id_9.flag
+from new_class_2 left join  class_id_9 
+on new_class_2.class_id  = class_id_9.class_id
+and new_class_2.city_id = class_id_9.city_id;
+
+
+insert overwrite table table_all select 
+table_all.*,class_id_10.flag from table_all left join class_id_10 
+on table_all.class_id =  class_id_10.class_id
+and table_all.city_id = class_id_10.city_id;
+select * from table_all;
+
+insert overwrite table table_all select 
+table_all.*,class_id_11.flag from table_all left join class_id_11 
+on table_all.class_id =  class_id_11.class_id
+and table_all.city_id = class_id_11.city_id;
+
+insert overwrite table table_all select 
+table_all.*,class_id_12.flag from table_all left join class_id_12 
+on table_all.class_id =  class_id_12.class_id
+and table_all.city_id = class_id_12.city_id;

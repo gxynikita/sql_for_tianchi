@@ -1,0 +1,93 @@
+-- 统计所有日期时的class_id的销量
+-- drop table if exists sum_quantity_1;
+-- create table sum_quantity_1 as select sale_date,class_id,sum(sale_quantity) as sum_quantity_1 from yc_passenger_car_sales 
+-- group by sale_date,class_id;
+-- drop table if exists sum_quantity_2;
+-- create table sum_quantity_2 as select sale_date,class_id,sum(sale_quantity_2) as sum_quantity_2 from yc_passenger_car_sales_second 
+-- group by sale_date,class_id;
+-- drop table if exists car_yields_quantity;
+-- create table car_yields_quantity as
+-- select yc_passenger_car_yields.*,(sum_quantity_1.sum_quantity_1) as sum_quantity_1
+-- from yc_passenger_car_yields ,sum_quantity_1
+-- where  yc_passenger_car_yields.produce_date = sum_quantity_1.sale_date 
+-- and  yc_passenger_car_yields.class_id = sum_quantity_1.class_id ;
+-- drop table if exists compare_quantity;
+-- create table compare_quantity as select 
+-- car_yields_quantity.*,(sum_quantity_2.sum_quantity_2) as sum_quantity_2
+-- from car_yields_quantity,sum_quantity_2
+-- where car_yields_quantity.produce_date = sum_quantity_2.sale_date
+-- and car_yields_quantity.class_id = sum_quantity_2.class_id;
+-- select * from compare_quantity;
+-- drop table if exists sum_quantity_1;
+-- drop table if exists sum_quantity_2;
+-- drop table if exists car_yields_quantity;
+
+-- drop table if exists max_quantity_mon;
+-- create table max_quantity_mon as select sale_date,class_id,max(sale_quantity) as m_quantity
+-- from yc_passenger_car_sales  group by sale_date ,class_id;
+
+-- drop table if exists compare_quantity_1;
+-- create table compare_quantity_1 as select 
+-- compare_quantity.*,(max_quantity_mon.m_quantity) as max_quantity
+-- from compare_quantity,max_quantity_mon
+-- where compare_quantity.produce_date = max_quantity_mon.sale_date
+-- and compare_quantity.class_id = max_quantity_mon.class_id;
+
+--该表是找到每一年的生产量和实际最大销量的比值。
+-- drop table if exists proportion;
+-- create table proportion as select compare_quantity_1.*,(max_quantity/produce_quantity) as proportion
+-- from compare_quantity_1 ;
+
+-- select * from proportion where proportion > 0.5 and produce_date >201612;
+-- select * from yc_passenger_car_sales  where sale_date = 201712 and class_id = 10820 ;
+-- select sum(produce_quantity) from yc_passenger_car_yields where class_id = 11186  ;
+-- select sum(sale_quantity) from yc_passenger_car_sales where class_id = 11186;
+
+--该处是2012到2017年的总生产量和总销量对应表。
+drop table if exists produce_sell;
+create table produce_sell as 
+select sales_2.class_id,sell,produce,(produce/sell) as proportion from 
+(select class_id,sum(yc_passenger_car_sales.sale_quantity) as sell from yc_passenger_car_sales group by class_id) as sales_1,
+(select class_id,sum(yc_passenger_car_yields.produce_quantity) as produce from yc_passenger_car_yields group by class_id) as sales_2
+where sales_1.class_id = sales_2.class_id;
+
+----对数据进行每一年的销量和生产的统计
+-- drop table if exists produce_data_year;
+-- create table produce_data_year as
+-- select class_id,sum(produce_quantity) as year_quantity,
+-- (case when produce_date like '2012%' then '2012'
+-- when produce_date like '2013%' then '2013'
+-- when produce_date like '2014%' then '2014'
+-- when produce_date like '2015%' then '2015'
+-- when produce_date like '2016%' then '2016'
+-- when produce_date like '2017%' then '2017'
+-- else NULL end)as new_date
+-- from yc_passenger_car_yields group by class_id,produce_date ;
+ 
+-- drop table if exists sell_data_year;
+-- create table sell_data_year as 
+-- select class_id,sum(sale_quantity) as year_quantity,
+-- (case when sale_date like '2012%' then '2012'
+-- when sale_date like '2013%' then '2013'
+-- when sale_date like '2014%' then '2014'
+-- when sale_date like '2015%' then '2015'
+-- when sale_date like '2016%' then '2016'
+-- when sale_date like '2017%' then '2017'
+-- else NULL end)as new_date
+-- from yc_passenger_car_sales  group by class_id,sale_date ; 
+
+
+drop table if exists num_1 ;
+create table num_1 as select * from proportion 
+where produce_date>201709 and proportion >1;
+ 
+
+-- select * from yc_passenger_car_yields where class_id = 10067 and produce_date like '2012%';
+-- select * from proportion where proportion >1 and produce_date >201611; 
+-- select * from yc_passenger_car_sales where class_id = 10545  and sale_date =201612;
+-- select sum(produce_quantity)  from yc_passenger_car_yields where produce_date between 201701 and 201712;
+-- select sum(sale_quantity) from yc_passenger_car_sales where sale_date between 201701 and 201712;
+-- select sum(sale_quantity_2) from true_train where sale_date between 201701 and 201712;
+-- select * from yc_passenger_car_sales where city_id =150  and class_id = 10871 and sale_date between 201610 and 201612;
+
+

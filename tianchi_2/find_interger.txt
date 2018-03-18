@@ -1,0 +1,19 @@
+-- drop table if exists complete_date;
+-- drop table if exists complete_date_1;
+-- drop table if exists complete_date_2;
+-- create table complete_date as 
+-- select * from class_converge  
+-- where sale_date >201612;
+-- create table complete_date_1 as 
+-- select complete_date.city_id,complete_date.class_id,count(complete_date.sale_quantity) as num from complete_date
+-- group by city_id,class_id ;
+-- create table complete_date_2 as
+-- select * from complete_date_1 where num > 11;
+-- drop table if exists complete_city_2017;
+-- create table complete_city_2017 as select 
+-- complete_date.* from complete_date,complete_date_2 where 
+-- complete_date.city_id = complete_date_2.city_id
+-- and complete_date.class_id = complete_date_2.class_id;
+-- drop table complete_date;
+-- drop table complete_date_1;
+-- drop table complete_date_2;

@@ -1,0 +1,35 @@
+drop table if exists all_divisor; 
+create table all_divisor as select 
+yc_passenger_car_sales.city_id,yc_passenger_car_sales.class_id,yc_passenger_car_sales.sale_quantity,
+(sale_quantity % 2) as divisor_2,
+(sale_quantity % 3) as divisor_3,
+(sale_quantity % 5) as divisor_5,
+(sale_quantity % 7) as divisor_7
+from yc_passenger_car_sales
+group by city_id,class_id,sale_quantity;
+drop table if exists divisor_sum;
+create table divisor_sum as select 
+city_id,class_id,sum(divisor_2) as sum2,sum(divisor_3) as sum3,sum(divisor_5) as sum5,sum(divisor_7) as sum7
+from all_divisor group by city_id,class_id;
+drop table if exists class_id_divisor;
+create table class_id_divisor as
+select divisor_sum.city_id,divisor_sum.class_id,
+(case when sum2 = 0 then  2
+when sum3 = 0 then  3
+when sum5 =0 then  5
+when sum7 = 0 then  7
+ELSE NULL end ) as divisor
+ from divisor_sum;
+create table class_id_divisor_1 as  
+select city_id,class_id,if(divisor is NULL ,1,divisor) as divisor from class_id_divisor;
+create table yc_passenger_car_sales_second as
+select yc_passenger_car_sales.*,(yc_passenger_car_sales.sale_quantity/divisor) as sale_quantity_2
+from yc_passenger_car_sales left join class_id_divisor_1 on
+yc_passenger_car_sales.city_id = class_id_divisor_1.city_id and
+yc_passenger_car_sales.class_id = class_id_divisor_1.class_id;
+drop table class_id_divisor ;
+drop table divisor_sum;
+drop table all_divisor;
+
+
+

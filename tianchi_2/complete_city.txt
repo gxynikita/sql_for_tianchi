@@ -1,0 +1,70 @@
+-- --找到大于12个月的class_id.
+-- drop table if exists city_more_12;
+-- create table city_more_12 as 
+-- select class_converges.province_id,city_id,class_id,count(sale_date)as num from class_converges
+-- group by province_id,city_id,class_id;
+-- create table  city_more_12_1  as select * from city_more_12 where num >12;
+
+-- drop table if exists complete_city_all_more_12;
+-- create table complete_city_all_more_12 as select 
+-- class_converges.* from class_converges,city_more_12_1 where 
+-- class_converges.city_id = city_more_12_1.city_id
+-- and class_converges.class_id = city_more_12_1.class_id;
+
+
+-- --将得到的arima得到的结果填入表中
+-- create table if not exists  yc_result_sample_a as select * from odps_tc_257100_f673506e024.yc_result_sample_a;
+-- insert overwrite table yc_result_sample_a  
+-- select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,yc_result_sample_a.class_id,
+-- if(yc_result_sample_a.predict_quantity is null,arima_city.forecast,yc_result_sample_a.predict_quantity)as predict_quantity 
+-- from yc_result_sample_a left join  arima_city
+-- on yc_result_sample_a.city_id = arima_city.city_id
+-- and  yc_result_sample_a.class_id = arima_city.class_id;
+-- select count(*) from yc_result_sample_a  where predict_quantity is NULL;
+
+--将1510个无法预测值填入
+-- insert overwrite table yc_result_sample_a  
+-- select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,yc_result_sample_a.class_id,
+-- if(yc_result_sample_a.predict_quantity is null,missing_1510_result.sell_quantity,yc_result_sample_a.predict_quantity)as predict_quantity 
+-- from yc_result_sample_a left join  missing_1510_result
+-- on yc_result_sample_a.city_id = missing_1510_result.city_id
+-- and  yc_result_sample_a.class_id = missing_1510_result.class_id;
+-- select count(*) from yc_result_sample_a where predict_quantity is NULL ;
+-- select * from arima_city where city_id = 280 and class_id = 10322;
+
+-- select * from yc_result_sample_a  where predict_quantity <0;
+-- --该步骤可以将小于零（717个）的，以及部分空值填入,此时注意顺序先改小于零的再改空值。
+-- drop table if exists  statistic_201711;
+-- drop table if exists statistic_201712;
+-- create table statistic_201711 as select * from class_converges where sale_date='201711';
+-- create table statistic_201712 as select * from class_converges where sale_date='201712';
+-- insert overwrite table yc_result_sample_a  
+-- select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,yc_result_sample_a.class_id,
+-- if(yc_result_sample_a.predict_quantity is NULL ,statistic_201712.predict_quantity*0.8,yc_result_sample_a.predict_quantity)as predict_quantity 
+-- from yc_result_sample_a left join  statistic_201712
+-- on yc_result_sample_a.city_id = statistic_201712.city_id
+-- and  yc_result_sample_a.class_id = statistic_201712.class_id;
+-- insert overwrite table yc_result_sample_a  
+-- select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,yc_result_sample_a.class_id,
+-- if(yc_result_sample_a.predict_quantity is NULL ,statistic_201711.predict_quantity,yc_result_sample_a.predict_quantity)as predict_quantity 
+-- from yc_result_sample_a left join  statistic_201711
+-- on yc_result_sample_a.city_id = statistic_201711.city_id
+-- and  yc_result_sample_a.class_id = statistic_201711.class_id;
+
+-- --插入最后2219个空值
+-- insert overwrite table yc_result_sample_a  
+-- select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,yc_result_sample_a.class_id,
+-- if(yc_result_sample_a.predict_quantity  is NULL ,avg_4706_result.sale_quantity,yc_result_sample_a.predict_quantity)as predict_quantity 
+-- from yc_result_sample_a left join avg_4706_result
+-- on yc_result_sample_a.city_id = avg_4706_result.city_id
+-- and  yc_result_sample_a.class_id = avg_4706_result.class_id;
+-- select count(*) from yc_result_sample_a where predict_quantity is NULL ;
+--  select * from yc_result_sample_a where predict_quantity < 0 ;
+-- select * from arima_city where city_id = 117 and class_id = 10584;
+drop table if exists yc_result_submit_a;
+alter table yc_result_sample_a rename to yc_result_submit_a;
+
+
+
+
+

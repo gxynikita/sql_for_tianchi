@@ -1,0 +1,72 @@
+-- 找到一对多个城市的第一次买车的日期
+-- drop table  if exists o2m_city_date;
+-- create table o2m_city_date as select simiar_city.*,(min(yc_passenger_car_sales.sale_date)) as star_date
+-- from simiar_city ,yc_passenger_car_sales
+-- where yc_passenger_car_sales.city_id = simiar_city.sell_city_id
+-- and  yc_passenger_car_sales.class_id = simiar_city.class_id
+-- group by simiar_city.city_id,simiar_city.class_id,simiar_city.sell_city_id;
+
+-- drop table if exists o2m_city_date_1;
+-- create table o2m_city_date_1 as select o2m_city_date.*,(sum(yc_passenger_car_sales.sale_quantity)) as start_quantity
+-- from o2m_city_date , yc_passenger_car_sales 
+-- where  yc_passenger_car_sales.city_id = o2m_city_date.sell_city_id
+-- and yc_passenger_car_sales.sale_date = o2m_city_date.star_date
+-- and yc_passenger_car_sales.class_id = o2m_city_date.class_id
+-- group by o2m_city_date.city_id,o2m_city_date.class_id,o2m_city_date.sell_city_id,o2m_city_date.star_date;
+
+-- 取每个日期的第一次卖缺失class_id的销量平均值
+-- drop table if exists o2m_city_avg_sale;
+-- create table o2m_city_avg_sale as
+-- select city_id,class_id,(avg(start_quantity)) as start_sale_avg
+-- from o2m_city_date_1
+-- group by o2m_city_date_1.city_id,o2m_city_date_1.class_id;
+
+-- 填充1510个缺失值
+-- drop table if exists o2m_simiar_city_sale_final;
+-- create table o2m_simiar_city_sale_final as 
+-- select sample_submit_final.predict_date,sample_submit_final.province_id,sample_submit_final.city_id,sample_submit_final.class_id,if(sample_submit_final.sale_quantity is null,o2m_city_avg_sale.start_sale_avg,sample_submit_final.sale_quantity)as predict_quantity 
+-- from sample_submit_final left join o2m_city_avg_sale 
+-- on sample_submit_final.city_id = o2m_city_avg_sale.city_id
+-- and  sample_submit_final.class_id = o2m_city_avg_sale.class_id;
+
+-- select * from o2m_city_avg_sale order by start_sale_avg DESC   limit 10000;
+--  select * from o2m_city_date  where class_id =11294;
+-- select * from yc_passenger_car_sales where class_id = 11294;
+-- select count(*) from  prj_tc_231640_117796_v39ogl.o2m_simiar_city_sale_final  where predict_quantity is NULL ;
+
+-- 针对除11，12月份和缺失的1510的其他的值
+-- drop table if exists loss_4706;
+-- create table  loss_4706
+-- as select * from  o2m_simiar_city_sale_final
+-- where predict_quantity is NULL;
+
+-- drop table if exists loss_4706_1;
+-- create table loss_4706_1
+-- as select loss_4706.class_id,loss_4706.city_id,yc_passenger_car_sales.sale_date,(sum(yc_passenger_car_sales.sale_quantity)) as sale
+-- from loss_4706,yc_passenger_car_sales
+-- where yc_passenger_car_sales.class_id = loss_4706.class_id
+-- and yc_passenger_car_sales.city_id = loss_4706.city_id
+-- group by loss_4706.class_id,loss_4706.city_id,yc_passenger_car_sales.sale_date;
+
+-- drop table if exists  loss_4706_2;
+-- create table loss_4706_2
+-- as select loss_4706_1.class_id,loss_4706_1.city_id,(avg(loss_4706_1.sale)) as predict_quantity
+-- from loss_4706_1
+-- group by loss_4706_1.class_id,loss_4706_1.city_id;
+
+-- select * from prj_tc_231640_117796_v39ogl.loss_4706_1 
+-- where class_id = 10105 and city_id = 1;
+
+-- 填充4706个空值到表中
+
+-- drop table if exists o2m_simiar_city_sale_final_1;
+-- create table o2m_simiar_city_sale_final_1 as 
+-- select o2m_simiar_city_sale_final.predict_date,o2m_simiar_city_sale_final.province_id,o2m_simiar_city_sale_final.city_id,o2m_simiar_city_sale_final.class_id,if(o2m_simiar_city_sale_final.predict_quantity is null,loss_4706_2.predict_quantity,o2m_simiar_city_sale_final.predict_quantity)as predict_quantity 
+-- from o2m_simiar_city_sale_final left join loss_4706_2 
+-- on o2m_simiar_city_sale_final.city_id = loss_4706_2.city_id
+-- and  o2m_simiar_city_sale_final.class_id = loss_4706_2.class_id;
+
+-- select count(*) from prj_tc_231640_117796_v39ogl.o2m_simiar_city_sale_final_1 where predict_quantity is NULL ;
+
+drop table if exists yc_result_submit_a;
+alter table o2m_simiar_city_sale_final_1 rename to yc_result_submit_a; 

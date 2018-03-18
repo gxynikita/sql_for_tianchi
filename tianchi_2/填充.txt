@@ -1,0 +1,48 @@
+----新的测试集
+drop table if exists yc_result_sample_b;
+create table  yc_result_sample_b as
+select * from odps_tc_257100_f673506e024.yc_result_sample_b;
+
+----找到新的测试集与机器学习的差集(result_pro为机器学习能跑出的集合) 
+drop table if exists loss_all_b;
+create table loss_all_b as select * from 
+(select yc_result_sample_b.city_id,yc_result_sample_b.class_id,
+if(yc_result_sample_b.predict_quantity is NULL,result_pro.predict_number,yc_result_sample_b.predict_quantity) as predict_quantity
+from yc_result_sample_b left join result_pro 
+on yc_result_sample_b.city_id = result_pro.city_id
+and yc_result_sample_b.class_id = result_pro.class_id) t
+where t.predict_quantity is NULL ;
+
+----在差集中找到销售日期最后大于201708月的
+-- drop table if exists  first_data;
+-- create table first_data as select * from class_converge where sale_date > 201708
+drop table if exists loss_all_b_1;
+create table loss_all_b_1 as select first_data.sale_date ,first_data.city_id,first_data.class_id,first_data.sale_quantity
+from first_data ,loss_all_b
+where first_data.city_id = loss_all_b.city_id
+and first_data.class_id = loss_all_b.class_id;
+
+----在loss_all_b_1中找到class_id对应的平均值。
+drop table if exists loss_all_b_2;
+create table loss_all_b_2 as select loss_all_b_1.class_id,loss_all_b_1.city_id,t.avg_quantity,t.min_quantity from  
+(select class_id,city_id,avg(sale_quantity) as avg_quantity,min(sale_quantity) as min_quantity
+from loss_all_b_1 group by class_id,city_id )as t,loss_all_b_1
+where loss_all_b_1.class_id = t.class_id
+and loss_all_b_1.city_id = t.city_id;
+
+----对表的空值进行填充
+drop table if exists loss_all_b_3;
+create table loss_all_b_3 as
+select loss_all_b_2.city_id,loss_all_b_2.class_id, 
+(case when loss_all_b_2.avg_quantity <11 then yc_result_submit_a.predict_quantity * 0.7
+when loss_all_b_2.avg_quantity between 11 and 100 then loss_all_b_2.min_quantity * 1.5
+when loss_all_b_2.avg_quantity >100 then 100
+else NULL end ) as predict_quantity
+from loss_all_b_2 left join  yc_result_submit_a
+on loss_all_b_2.city_id = yc_result_submit_a.city_id
+and loss_all_b_2.class_id = yc_result_submit_a.class_id;
+
+select count(*) from loss_all_b_3 where predict_quantity is null ; 
+
+select count(*) from loss_all_b ;  
+select count(*) from loss_all_b_2; 

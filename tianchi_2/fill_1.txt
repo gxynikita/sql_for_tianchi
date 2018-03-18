@@ -1,0 +1,140 @@
+----A.首先找到9，10，11，12有任意一个月
+----1.找到新的车型（这里针对的是2017年1月和8月都没有的）
+drop table if exists class_converge;
+create table class_converge as 
+select sale_date,province_id,city_id,class_id,sum(sale_quantity) as sale_quantity 
+from yc_passenger_car_sales group by sale_date,province_id,city_id,class_id;
+select * from class_converge ;
+
+drop table if exists new_class_1;
+create table new_class_1 as select * from 
+(select class_id,city_id,min(sale_date) as first_date
+from (select * from class_converge where sale_date > 201612) as t1 group by class_id ,city_id) t2 where first_date >201708;
+
+drop table if exists new_class_2;
+create table new_class_2 as select t.* from (select city_id,class_id from class_converge where sale_date > 201708 group by class_id) t,new_class_1
+where t.class_id = new_class_1.class_id
+and t.city_id = new_class_1.city_id ;
+
+drop table if exists class_id_9;
+create table class_id_9 as select *,1 as flag from new_class_1 where first_date=201709;  
+drop table if exists class_id_10;
+create table class_id_10 as select *,1 as flag from new_class_1 where first_date = 201710;
+drop table if exists class_id_11;
+create table class_id_11 as select * ,1 as flag from new_class_1 where first_date = 201711;
+drop table if exists class_id_12;
+create table class_id_12  as select *,1 as flag from new_class_1 where first_date = 201712;
+
+drop table if exists table_all;
+create table table_all as select new_class_2.*,class_id_9.flag as flag_9
+from new_class_2 left join  class_id_9 
+on new_class_2.class_id  = class_id_9.class_id
+and new_class_2.city_id = class_id_9.city_id;
+
+drop table if exists table_all_1;
+create table table_all_1 as select 
+table_all.*,class_id_10.flag  as flag_10 from table_all left join class_id_10 
+on table_all.class_id =  class_id_10.class_id
+and table_all.city_id = class_id_10.city_id;
+-- select * from table_all;
+
+drop table if exists table_all_2;
+create table table_all_2 as select 
+table_all_1.*,class_id_11.flag as flag_11 from table_all_1 left join class_id_11 
+on table_all_1.class_id =  class_id_11.class_id
+and table_all_1.city_id = class_id_11.city_id;
+
+drop table if exists table_all_3;
+create table table_all_3  as select 
+table_all_2.*,class_id_12.flag as flag_12 from table_all_2 left join class_id_12 
+on table_all_2.class_id =  class_id_12.class_id
+and table_all_2.city_id = class_id_12.city_id;
+
+--九月份的对应的值
+drop table if exists class_9_mon;
+create table class_9_mon as select city_id,class_id,sale_quantity from class_converge where sale_date =201709; 
+---十月份的值
+drop table if exists class_10_mon;
+create table class_10_mon as select city_id,class_id,sale_quantity from class_converge where sale_date =201710;
+
+--十一月的值
+drop table if exists class_11_mon;
+create table class_11_mon as select city_id,class_id,sale_quantity from class_converge where sale_date = 201711;
+---十二月的值
+drop table if exists class_12_mon;
+create table class_12_mon as select city_id,class_id,sale_quantity from class_converge where sale_date = 201712;
+
+drop table if exists table_all_4;
+create table table_all_4 as select table_all_3.*,class_9_mon.sale_quantity as sale_9,class_10_mon.sale_quantity as sale_10,
+class_11_mon.sale_quantity as sale_11,class_12_mon.sale_quantity as sale_12 from 
+table_all_3 left join  class_9_mon on table_all_3.class_id = class_9_mon.class_id and table_all_3.city_id = class_9_mon.city_id
+left join class_10_mon on table_all_3.class_id = class_10_mon.class_id and table_all_3.city_id = class_10_mon.city_id
+left join class_11_mon on table_all_3.class_id = class_11_mon.class_id and table_all_3.city_id = class_11_mon.city_id
+left join class_12_mon on table_all_3.class_id = class_12_mon.class_id and table_all_3.city_id = class_12_mon.city_id;
+
+select * from table_all_4 ;
+
+drop table if exists table_all_5;
+create table table_all_5 as
+select table_all_4.city_id,table_all_4.class_id,
+(case when flag_9 =1 and flag_10 is NULL  and flag_11 is NULL and flag_12 is NULL then class_9_mon.sale_quantity *1
+when flag_9 =1 and flag_10 is NULL and flag_11 is NULL and flag_12 =1 then class_9_mon.sale_quantity*1
+when flag_9 =1 and flag_10 =1 and flag_11 is NULL  and flag_12 is NULL then class_9_mon.sale_quantity *1.1
+when flag_9 =1 and flag_10 is null and flag_11 =1 and flag_12 is NULL then class_9_mon.sale_quantity *0.9
+when flag_9 =1 and flag_10 =1 and flag_11 = 1 and flag_12 is NULL  then class_9_mon.sale_quantity * 0.9
+when flag_9 =1 and flag_10 is NULL  and flag_11 =1  and flag_12  =1 then class_9_mon.sale_quantity *1.2
+when flag_9 =1 and flag_10 =1 and flag_11 is NULL  and flag_12  =1 then class_9_mon.sale_quantity *1
+when flag_9 is NULL and flag_10 = 1 and flag_11 is NULL  and flag_12 is null then  class_10_mon.sale_quantity *1
+when flag_9 is NULL and flag_10 =1 and flag_11 = 1 and flag_12 is NULL then class_10_mon.sale_quantity *0.9 
+when flag_9 is NULL and flag_10 =1 and flag_11 is NULL  and flag_12 =1 then class_10_mon.sale_quantity * 1.1
+when flag_9 is NULL and flag_10 is NULL and flag_11 is NULL and  flag_12 = 1 then class_12_mon.sale_quantity*0.6
+when flag_9 is NULL and flag_10 =1 and flag_11 =1 and flag_12 =1 then 
+(case when 0<= (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <0.33 and 0 <= (sale_11-sale_10)/(sale_11+sale_10) and  (sale_11-sale_10)/(sale_11+sale_10)  <0.33 then class_10_mon.sale_quantity * 0.8
+when 0<= (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <0.33 and 0.33 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <1 then class_10_mon.sale_quantity * 2.5
+when 0.33< (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <1 and 0 <= (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <0.33 then class_10_mon.sale_quantity * 1.2
+when 0.33< (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <1 and 0.33 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <1 then class_10_mon.sale_quantity * 3.5
+when -0.33< (sale_12-sale_11)/(sale_12 + sale_11) and  (sale_12-sale_11)/(sale_12 + sale_11) <=0 and -0.33 < (sale_11-sale_10)/(sale_11+sale_10)  and  (sale_11-sale_10)/(sale_11+sale_10) <=0 then class_10_mon.sale_quantity * 0.8
+when -0.33< (sale_12-sale_11)/(sale_12 + sale_11)  and (sale_12-sale_11)/(sale_12 + sale_11) <=0 and -1 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <-0.33 then  class_10_mon.sale_quantity * 0.8
+when -1< (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <-0.33 and -1 < (sale_11-sale_10)/(sale_11+sale_10)  and  (sale_11-sale_10)/(sale_11+sale_10) <-0.33 then class_10_mon.sale_quantity * 0.5
+when -1< (sale_12-sale_11)/(sale_12 + sale_11)  and (sale_12-sale_11)/(sale_12 + sale_11) <-0.33 and -0.33 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <=0 then  class_10_mon.sale_quantity * 0.8
+when -0.33< (sale_12-sale_11)/(sale_12 + sale_11) and  (sale_12-sale_11)/(sale_12 + sale_11) <=0 and 0 <=(sale_11-sale_10)/(sale_11+sale_10)  and (sale_11-sale_10)/(sale_11+sale_10) <0.33 then class_10_mon.sale_quantity * 1
+when -0.33< (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <=0  and 0.33 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10)  <1 then class_10_mon.sale_quantity * 1.2
+when -1< (sale_12-sale_11)/(sale_12 + sale_11)  and (sale_12-sale_11)/(sale_12 + sale_11)  <-0.33 and 0 <=(sale_11-sale_10)/(sale_11+sale_10) and  (sale_11-sale_10)/(sale_11+sale_10) <0.33 then class_10_mon.sale_quantity * 0.8
+when -1< (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11) <-0.33 and 0.33 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10)  <1 then class_10_mon.sale_quantity * 1.2
+when 0<= (sale_12-sale_11)/(sale_12 + sale_11)  and (sale_12-sale_11)/(sale_12 + sale_11)  <0.33 and -0.33 < (sale_11-sale_10)/(sale_11+sale_10)  and  (sale_11-sale_10)/(sale_11+sale_10) <=0 then class_10_mon.sale_quantity * 0.8
+when 0<=(sale_12-sale_11)/(sale_12 + sale_11)  and (sale_12-sale_11)/(sale_12 + sale_11) <0.33 and -1 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <-0.33 then class_10_mon.sale_quantity * 0.6
+when 0.33< (sale_12-sale_11)/(sale_12 + sale_11) and  (sale_12-sale_11)/(sale_12 + sale_11) <1 and -0.33 < (sale_11-sale_10)/(sale_11+sale_10) and (sale_11-sale_10)/(sale_11+sale_10) <=0 then class_10_mon.sale_quantity * 1.2
+when 0.33< (sale_12-sale_11)/(sale_12 + sale_11) and (sale_12-sale_11)/(sale_12 + sale_11)  <1 and -1 < (sale_11-sale_10)/(sale_11+sale_10) and  (sale_11-sale_10)/(sale_11+sale_10) <-0.33 then class_10_mon.sale_quantity * 1
+else null end) 
+when flag_9 is NULL and flag_10 is NULL and flag_11 =1 and flag_12 is NULL then class_11_mon.sale_quantity*1
+when flag_9 is NULL and flag_10 is NULL and flag_11 =1 and flag_12 =1 then (case when 0<= (sale_12-sale_11)/(sale_12+sale_11) and (sale_12-sale_11)/(sale_12+sale_11) <0.33 then class_11_mon.sale_quantity * 1
+when 0.33<(sale_12-sale_11)/(sale_12+sale_11) and (sale_12-sale_11)/(sale_12+sale_11) <1 then class_11_mon.sale_quantity*1.5
+when -0.33 <(sale_12-sale_11)/(sale_12 +sale_11) and (sale_12-sale_11)/(sale_12 +sale_11) <=0 then class_11_mon.sale_quantity 
+when -1<(sale_12-sale_11)/(sale_12 +sale_11) and (sale_12-sale_11)/(sale_12 +sale_11)<-0.33 then class_11_mon.sale_quantity 
+else null end) else null end) as predict_quantity from table_all_4 left join  class_9_mon on table_all_4.class_id = class_9_mon.class_id and table_all_4.city_id = class_9_mon.city_id
+left join class_10_mon on table_all_4.class_id = class_10_mon.class_id and table_all_4.city_id = class_10_mon.city_id
+left join class_11_mon on table_all_4.class_id = class_11_mon.class_id and table_all_4.city_id = class_11_mon.city_id
+left join class_12_mon on table_all_4.class_id = class_12_mon.class_id and table_all_4.city_id = class_12_mon.city_id;
+
+-- select * from class_converge  where city_id =  142 and  class_id =10043;
+drop table if exists new_b;
+create table new_b as
+select result_final_simple.city_id,result_final_simple.class_id,
+if(result_final_simple.predict_number is null,table_all_5.predict_quantity,result_final_simple.predict_number) as predict_1
+from result_final_simple left join table_all_5  on result_final_simple.class_id = table_all_5.class_id
+and result_final_simple.city_id = table_all_5.city_id ;
+drop table if exists table_all_4;
+drop table if exists class_12_mon;
+drop table if exists class_11_mon;
+drop table if exists class_10_mon;
+drop table if exists class_9_mon;
+drop table if exists table_all_3;
+drop table if exists table_all_2;
+drop table if exists table_all_1;
+drop table if exists table_all;
+drop table if exists new_class_1;
+drop table if exists new_class_2;
+drop table if exists class_id_9;
+drop table if exists class_id_10;
+drop table if exists class_id_11;
+drop table if exists class_id_12;

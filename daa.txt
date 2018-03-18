@@ -1,0 +1,64 @@
+---找到最早卖的时期是201612，而后面的时期要包括201701(突然变成只有201701和201612).
+-- drop table if exists tbl_1;
+-- create table tbl_1 as select min(yc_passenger_car_sales.sale_date) as date_1 ,province_id ,city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,
+-- sale_quantity from yc_passenger_car_sales group by province_id ,city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,
+-- sale_quantity ;
+
+-- drop table if exists tbl_2;
+-- create table tbl_2 as select * from tbl_1 where date_1=201612;
+
+-- drop table if exists tbl_3;
+-- create table tbl_3 as select max(yc_passenger_car_sales.sale_date) as date_1 ,province_id ,city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,
+-- sale_quantity from yc_passenger_car_sales group by province_id ,city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,
+-- sale_quantity ;
+
+-- drop table if exists tbl_4;
+-- create table tbl_4 as select * from tbl_3 where date_1=201701;
+
+
+
+drop table if exists tbl_5;
+create table tbl_5 as select tbl_2.* from tbl_2 ,tbl_4  where  tbl_2.province_id=tbl_4.province_id
+and tbl_2.city_id=tbl_4.city_id
+and tbl_2.class_id=tbl_4.class_id
+and tbl_2.brand_id=tbl_4.brand_id
+and tbl_2.type_id=tbl_4.type_id
+and tbl_2.level_id=tbl_4.level_id
+and tbl_2.department_id=tbl_4.department_id
+and tbl_2.if_MPV_id=tbl_4.if_MPV_id
+and tbl_2.displacement=tbl_4.displacement
+and tbl_2.compartment=tbl_4.compartment
+and tbl_2.fuel_type_id=tbl_4.fuel_type_id
+and tbl_2.sale_quantity=tbl_4.sale_quantity;
+
+ 
+drop table if exists tbl_6;
+create table tbl_6 as select yc_passenger_car_sales.* from yc_passenger_car_sales ,tbl_5 where 
+yc_passenger_car_sales.province_id=tbl_5.province_id
+and yc_passenger_car_sales.city_id=tbl_5.city_id
+and yc_passenger_car_sales.class_id=tbl_5.class_id
+and yc_passenger_car_sales.brand_id=tbl_5.brand_id
+and yc_passenger_car_sales.type_id=tbl_5.type_id
+and yc_passenger_car_sales.level_id=tbl_5.level_id
+and yc_passenger_car_sales.department_id=tbl_5.department_id
+and yc_passenger_car_sales.if_MPV_id=tbl_5.if_MPV_id
+and yc_passenger_car_sales.displacement=tbl_5.displacement
+and yc_passenger_car_sales.compartment=tbl_5.compartment
+and yc_passenger_car_sales.fuel_type_id=tbl_5.fuel_type_id
+and yc_passenger_car_sales.sale_quantity=tbl_5.sale_quantity;
+
+
+-- drop table tbl_1;
+-- drop table tbl_4;
+-- drop table tbl_3;
+-- drop table tbl_5;
+-- drop table tbl_2;
+
+----找到最早的出售日期在201712。
+-- drop table if exists tbe_1;
+-- create table tbe_1 as select min(yc_passenger_car_sales.sale_date) as date_1 ,province_id ,city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,
+-- sale_quantity from yc_passenger_car_sales group by province_id ,city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,
+-- sale_quantity ;
+
+-- drop table if exists tbe_2;
+-- create table tbe_2 as select tbe_1.* from tbe_1 where date_1 = 201712;

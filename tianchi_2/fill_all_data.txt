@@ -1,0 +1,54 @@
+----实现xgboost无法跑下的数据中日期只有201711，没有201712的数据。
+-- --找到xgboost下无法跑出来的。
+-- drop table if exists xgboost_null;
+-- create table xgboost_null as select * from result_pro where predict_number is NULL ;
+
+-- ----针对原始数据跑的
+-- drop table if exists data_no_xgboost_1;
+-- create table data_no_xgboost_1 
+-- as select yc_passenger_car_sales.* from
+-- yc_passenger_car_sales left join xgboost_null
+-- on yc_passenger_car_sales.class_id = xgboost_null.class_id
+-- and yc_passenger_car_sales.city_id = xgboost_null.city_id;
+-- 
+-- ----针对求和数据
+-- drop table if exists data_no_xgboost_2;
+-- create table data_no_xgboost_2 
+-- as select class_converges.* from
+-- class_converges  left join xgboost_null
+-- on class_converges.class_id = xgboost_null.class_id
+-- and class_converges.city_id = xgboost_null.city_id;
+-- drop table if exists xgboost_null;
+
+-- ----找到有201711的，突然没有201712的（要想用原始数据，将data_no_xgboost_1改为data_no_xgboost_2即可）
+-- drop table if exists tb_1;
+-- create table tb_1
+-- as select data_no_xgboost_2.* from data_no_xgboost_2 
+-- where sale_date between  201711 and 201712;
+
+-- drop table if exists tb_2;
+-- create table tb_2 as select 
+-- tb_1.* from tb_1 where sale_date = 201711;
+
+-- drop table if exists tb_3;
+-- create table tb_3 as select 
+-- city_id,class_id,count(sale_date) as num from tb_1
+-- group by city_id,class_id;
+-- drop table if exists tb_4;
+-- create table tb_4 as 
+-- select * from tb_3 where num =1;
+ 
+-- drop table if exists tb_loss_201712;
+-- create table tb_loss_201712 as
+-- select tb_2.* from tb_4,tb_2
+-- where tb_4.class_id = tb_2.class_id
+-- and tb_4.city_id = tb_2.city_id;
+
+-- drop table tb_2;
+-- drop table tb_3;
+-- drop table tb_4;
+----检验数据
+-- select * from tb_loss_201712  where city_id = 7 and class_id = 10051;
+
+
+

@@ -1,0 +1,414 @@
+-- drop table  if exists tem_split_pro;
+-- create table tem_split_pro as select cast(sale_date as bigint) as sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , 
+-- if(displacement is null,0,if (cast(substr(displacement,1,3) as bigint)>1.6,1,0) ) as 
+-- displacement ,compartment ,fuel_type_id,sale_quantity from yc_passenger_car_sales;
+
+-- drop table if exists tem_split;
+-- create table tem_split as select sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , displacement ,compartment ,fuel_type_id,sum(sale_quantity) as sale_quantity 
+-- from tem_split_pro group by sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , displacement ,compartment ,fuel_type_id;
+
+-- drop table if exists tem_2017_9;
+-- create table tem_2017_9 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201709;
+-- drop table if exists tem_2017_10;
+-- create table tem_2017_10 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201710;
+-- drop table if exists tem_2017_11;
+-- create table tem_2017_11 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201711;
+-- drop table if exists tem_2017_12;
+-- create table tem_2017_12 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201712;
+
+-- drop table if exists tem_2017_9_12_pro;
+-- create table tem_2017_9_12_pro as select tem_2017_9.province_id ,tem_2017_9.city_id ,tem_2017_9.class_id ,tem_2017_9.brand_id ,tem_2017_9.compartment ,tem_2017_9.department_id ,tem_2017_9.displacement ,
+-- tem_2017_9.fuel_type_id ,tem_2017_9.if_mpv_id ,tem_2017_9.level_id ,tem_2017_9.type_id ,tem_2017_9.sale_quantity as sale_9, tem_2017_10.sale_quantity as sale_10,tem_2017_11.sale_quantity as sale_11,
+-- tem_2017_12.sale_quantity as sale_12 from tem_2017_9 
+-- left join tem_2017_10 on tem_2017_9.province_id=tem_2017_10.province_id and tem_2017_9.city_id=tem_2017_10.city_id and tem_2017_9.class_id=tem_2017_10.class_id and tem_2017_9.brand_id=tem_2017_10.brand_id 
+-- and tem_2017_9.compartment=tem_2017_10.compartment and tem_2017_9.department_id=tem_2017_10.department_id and tem_2017_9.displacement=tem_2017_10.displacement and tem_2017_9.fuel_type_id=tem_2017_10.fuel_type_id 
+-- and tem_2017_9.if_mpv_id=tem_2017_10.if_mpv_id and tem_2017_9.level_id=tem_2017_10.level_id and tem_2017_9.type_id=tem_2017_10.type_id 
+-- left join tem_2017_11 on tem_2017_9.province_id=tem_2017_11.province_id and tem_2017_9.city_id=tem_2017_11.city_id and tem_2017_9.class_id=tem_2017_11.class_id and tem_2017_9.brand_id=tem_2017_11.brand_id 
+-- and tem_2017_9.compartment=tem_2017_11.compartment and tem_2017_9.department_id=tem_2017_11.department_id and tem_2017_9.displacement=tem_2017_11.displacement and tem_2017_9.fuel_type_id=tem_2017_11.fuel_type_id 
+-- and tem_2017_9.if_mpv_id=tem_2017_11.if_mpv_id and tem_2017_9.level_id=tem_2017_11.level_id and tem_2017_9.type_id=tem_2017_11.type_id
+-- left join tem_2017_12 on tem_2017_9.province_id=tem_2017_12.province_id and tem_2017_9.city_id=tem_2017_12.city_id and tem_2017_9.class_id=tem_2017_12.class_id 
+-- and tem_2017_9.brand_id=tem_2017_12.brand_id and tem_2017_9.compartment=tem_2017_12.compartment and tem_2017_9.department_id=tem_2017_12.department_id and tem_2017_9.displacement=tem_2017_12.displacement 
+-- and tem_2017_9.fuel_type_id=tem_2017_12.fuel_type_id and tem_2017_9.if_mpv_id=tem_2017_12.if_mpv_id and tem_2017_9.level_id=tem_2017_12.level_id and tem_2017_9.type_id=tem_2017_12.type_id;
+
+-- drop table if exists tem_2017_9_12;
+-- create table tem_2017_9_12 as select tem_2017_9_12_pro.province_id ,tem_2017_9_12_pro.city_id ,tem_2017_9_12_pro.class_id ,tem_2017_9_12_pro.brand_id ,tem_2017_9_12_pro.compartment ,
+-- tem_2017_9_12_pro.department_id ,tem_2017_9_12_pro.displacement ,tem_2017_9_12_pro.fuel_type_id ,tem_2017_9_12_pro.if_mpv_id ,tem_2017_9_12_pro.level_id ,tem_2017_9_12_pro.type_id ,
+-- sale_9,
+-- if(tem_2017_9_12_pro.sale_9 is not null and tem_2017_9_12_pro.sale_10 is not null and tem_2017_9_12_pro.sale_12 is not null and tem_2017_9_12_pro.sale_11 is null,
+-- (tem_2017_9_12_pro.sale_10+tem_2017_9_12_pro.sale_12)/2,tem_2017_9_12_pro.sale_11) as sale_11,
+-- if(tem_2017_9_12_pro.sale_9 is not null and tem_2017_9_12_pro.sale_11 is not null and tem_2017_9_12_pro.sale_12 is not null and tem_2017_9_12_pro.sale_10 is null,
+-- (tem_2017_9_12_pro.sale_9+tem_2017_9_12_pro.sale_11)/2,tem_2017_9_12_pro.sale_10) as sale_10,
+-- sale_12
+-- from tem_2017_9_12_pro;
+
+-- drop table if exists tem_2017_9_12_drop_null;  -- 测试集制作完毕
+-- create table tem_2017_9_12_drop_null as select * from tem_2017_9_12 where sale_9 is not null and sale_10 is not null and sale_11 is not null and sale_12 is not null;
+
+-- drop table if exists tem_2017_9;
+-- drop table if exists tem_2017_10;
+-- drop table if exists tem_2017_11;
+-- drop table if exists tem_2017_12;
+-- drop table if exists tem_2017_9_12_pro;
+-- drop table if exists tem_2017_9_12;
+
+drop table if exists tem_2014_9;
+create table tem_2014_9 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201409;
+drop table if exists tem_2014_10;
+create table tem_2014_10 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201410;
+drop table if exists tem_2014_11;
+create table tem_2014_11 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201411;
+drop table if exists tem_2014_12;
+create table tem_2014_12 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201412;
+drop table if exists tem_2015_1;
+create table tem_2015_1 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201501;
+drop table if exists tem_2015_2;
+create table tem_2015_2 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201502;
+
+-- drop table if exists tem_2016_9;
+-- create table tem_2016_9 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201609;
+-- drop table if exists tem_2016_10;
+-- create table tem_2016_10 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201610;
+-- drop table if exists tem_2016_11;
+-- create table tem_2016_11 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201611;
+-- drop table if exists tem_2016_12;
+-- create table tem_2016_12 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201612;
+-- drop table if exists tem_2017_1;
+-- create table tem_2017_1 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201701;
+-- drop table if exists tem_2017_2;
+-- create table tem_2017_2 as select province_id,city_id,class_id,brand_id,compartment,department_id,displacement,fuel_type_id,if_mpv_id,level_id,type_id,sale_quantity from tem_split  where sale_date=201702;
+
+-- drop table if exists tem_2016_9_1;
+-- create table tem_2016_9_1 as select tem_2016_9.province_id ,tem_2016_9.city_id ,tem_2016_9.class_id ,tem_2016_9.brand_id ,tem_2016_9.compartment ,tem_2016_9.department_id ,tem_2016_9.displacement ,
+-- tem_2016_9.fuel_type_id ,tem_2016_9.if_mpv_id ,tem_2016_9.level_id ,tem_2016_9.type_id ,tem_2016_9.sale_quantity as sale_9, tem_2016_10.sale_quantity as sale_10,tem_2016_11.sale_quantity as sale_11,
+-- tem_2016_12.sale_quantity as sale_12,tem_2017_1.sale_quantity as sale_1 from tem_2016_9 
+-- left join tem_2016_10 on tem_2016_9.province_id=tem_2016_10.province_id and tem_2016_9.city_id=tem_2016_10.city_id and tem_2016_9.class_id=tem_2016_10.class_id and tem_2016_9.brand_id=tem_2016_10.brand_id 
+-- and tem_2016_9.compartment=tem_2016_10.compartment and tem_2016_9.department_id=tem_2016_10.department_id and tem_2016_9.displacement=tem_2016_10.displacement and tem_2016_9.fuel_type_id=tem_2016_10.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2016_10.if_mpv_id and tem_2016_9.level_id=tem_2016_10.level_id and tem_2016_9.type_id=tem_2016_10.type_id 
+-- left join tem_2016_11 on tem_2016_9.province_id=tem_2016_11.province_id and tem_2016_9.city_id=tem_2016_11.city_id and tem_2016_9.class_id=tem_2016_11.class_id and tem_2016_9.brand_id=tem_2016_11.brand_id 
+-- and tem_2016_9.compartment=tem_2016_11.compartment and tem_2016_9.department_id=tem_2016_11.department_id and tem_2016_9.displacement=tem_2016_11.displacement and tem_2016_9.fuel_type_id=tem_2016_11.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2016_11.if_mpv_id and tem_2016_9.level_id=tem_2016_11.level_id and tem_2016_9.type_id=tem_2016_11.type_id 
+-- left join tem_2016_12 on tem_2016_9.province_id=tem_2016_12.province_id and tem_2016_9.city_id=tem_2016_12.city_id and tem_2016_9.class_id=tem_2016_12.class_id and tem_2016_9.brand_id=tem_2016_12.brand_id 
+-- and tem_2016_9.compartment=tem_2016_12.compartment and tem_2016_9.department_id=tem_2016_12.department_id and tem_2016_9.displacement=tem_2016_12.displacement and tem_2016_9.fuel_type_id=tem_2016_12.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2016_12.if_mpv_id and tem_2016_9.level_id=tem_2016_12.level_id and tem_2016_9.type_id=tem_2016_12.type_id
+-- left join tem_2017_1 on tem_2016_9.province_id=tem_2017_1.province_id and tem_2016_9.city_id=tem_2017_1.city_id and tem_2016_9.class_id=tem_2017_1.class_id and tem_2016_9.brand_id=tem_2017_1.brand_id 
+-- and tem_2016_9.compartment=tem_2017_1.compartment and tem_2016_9.department_id=tem_2017_1.department_id and tem_2016_9.displacement=tem_2017_1.displacement and tem_2016_9.fuel_type_id=tem_2017_1.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2017_1.if_mpv_id and tem_2016_9.level_id=tem_2017_1.level_id and tem_2016_9.type_id=tem_2017_1.type_id;
+
+
+-- drop table if exists tem_2016_9_1_drop_null; -- 测试集制作完毕
+-- create table tem_2016_9_1_drop_null as select * from tem_2016_9_1 where sale_9 is not null and sale_10 is not null and sale_11 is not null and sale_12 is not null and sale_1 is not null;
+
+-- drop table if exists tem_2016_9_1;
+
+
+-- drop table if exists train_first_enc;  -- 训练集独热编码
+-- create table train_first_enc as select 
+-- if(brand_id=8,1,0) as brand_id_8,if(brand_id=10,1,0) as brand_id_10,if(brand_id=11,1,0) as brand_id_11,if(brand_id=14,1,0) as brand_id_14,if(brand_id=15,1,0) as brand_id_15,if(brand_id=16,1,0) as brand_id_16,if(brand_id=17,1,0) as brand_id_17,
+-- if(brand_id=18,1,0) as brand_id_18,if(brand_id=25,1,0) as brand_id_25,if(brand_id=29,1,0) as brand_id_29,if(brand_id=30,1,0) as brand_id_30,if(brand_id=31,1,0) as brand_id_31,if(brand_id=35,1,0) as brand_id_35,if(brand_id=37,1,0) as brand_id_37,
+-- if(brand_id=42,1,0) as brand_id_42,if(brand_id=43,1,0) as brand_id_43,if(brand_id=50,1,0) as brand_id_50,if(brand_id=53,1,0) as brand_id_53,if(brand_id=56,1,0) as brand_id_56,if(brand_id=82,1,0) as brand_id_82,if(brand_id=86,1,0) as brand_id_86,
+-- if(brand_id=98,1,0) as brand_id_98,if(brand_id=99,1,0) as brand_id_99,if(brand_id=101,1,0) as brand_id_101,if(brand_id=103,1,0) as brand_id_103,if(brand_id=104,1,0) as brand_id_104,if(brand_id=110,1,0) as brand_id_110,if(brand_id=117,1,0) as brand_id_117,
+-- if(brand_id=126,1,0) as brand_id_126,if(brand_id=130,1,0) as brand_id_130,if(brand_id=132,1,0) as brand_id_132,if(brand_id=133,1,0) as brand_id_133,if(brand_id=135,1,0) as brand_id_135,if(brand_id=140,1,0) as brand_id_140,if(brand_id=145,1,0) as brand_id_145,
+-- if(compartment=1,1,0) as compartment_1,if(compartment=2,1,0) as compartment_2,if(compartment=3,1,0) as compartment_3,if(department_id=0,1,0) as department_id_0,if(department_id=1,1,0) as department_id_1,if(department_id=2,1,0) as department_id_2,
+-- if(department_id=3,1,0) as department_id_3,if(department_id=4,1,0) as department_id_4,if(department_id=5,1,0) as department_id_5,if(displacement=0,1,0) as displacement_0,if(displacement=1,1,0) as displacement_1,if(fuel_type_id=1,1,0) as fuel_type_id_1,
+-- if(if_mpv_id=0,1,0) as if_mpv_id_0,if(if_mpv_id=1,1,0) as if_mpv_id_1,if(level_id=0,1,0) as level_id_0,if(level_id=1,1,0) as level_id_1,if(level_id=2,1,0) as level_id_2,if(level_id=3,1,0) as level_id_3,if(level_id=4,1,0) as level_id_4,if(level_id=5,1,0) as level_id_5,
+-- if(level_id=6,1,0) as level_id_6,if(level_id=7,1,0) as level_id_7,if(type_id=1,1,0) as type_id_1,if(type_id=2,1,0) as type_id_2,if(type_id=3,1,0) as type_id_3,if(type_id=4,1,0) as type_id_4,
+-- sale_12,
+-- (sale_1-sale_12)/(sale_1+sale_12) as trend,
+-- (sale_10-sale_9)/(sale_10+sale_9) as trend_1,
+-- (sale_11-sale_10)/(sale_11+sale_10) as trend_2,
+-- (sale_12-sale_11)/(sale_12+sale_11) as trend_3,
+-- ((sale_10-sale_9)/(sale_10+sale_9)+(sale_11-sale_10)/(sale_11+sale_10)+(sale_12-sale_11)/(sale_12+sale_11))/3 as avg_trend
+-- from tem_2016_9_1_drop_null;
+
+-- drop table if exists test_first_enc;  -- 测试集独热编码
+-- create table test_first_enc as select 
+-- if(brand_id=8,1,0) as brand_id_8,if(brand_id=10,1,0) as brand_id_10,if(brand_id=11,1,0) as brand_id_11,if(brand_id=14,1,0) as brand_id_14,if(brand_id=15,1,0) as brand_id_15,if(brand_id=16,1,0) as brand_id_16,if(brand_id=17,1,0) as brand_id_17,
+-- if(brand_id=18,1,0) as brand_id_18,if(brand_id=25,1,0) as brand_id_25,if(brand_id=29,1,0) as brand_id_29,if(brand_id=30,1,0) as brand_id_30,if(brand_id=31,1,0) as brand_id_31,if(brand_id=35,1,0) as brand_id_35,if(brand_id=37,1,0) as brand_id_37,
+-- if(brand_id=42,1,0) as brand_id_42,if(brand_id=43,1,0) as brand_id_43,if(brand_id=50,1,0) as brand_id_50,if(brand_id=53,1,0) as brand_id_53,if(brand_id=56,1,0) as brand_id_56,if(brand_id=82,1,0) as brand_id_82,if(brand_id=86,1,0) as brand_id_86,
+-- if(brand_id=98,1,0) as brand_id_98,if(brand_id=99,1,0) as brand_id_99,if(brand_id=101,1,0) as brand_id_101,if(brand_id=103,1,0) as brand_id_103,if(brand_id=104,1,0) as brand_id_104,if(brand_id=110,1,0) as brand_id_110,if(brand_id=117,1,0) as brand_id_117,
+-- if(brand_id=126,1,0) as brand_id_126,if(brand_id=130,1,0) as brand_id_130,if(brand_id=132,1,0) as brand_id_132,if(brand_id=133,1,0) as brand_id_133,if(brand_id=135,1,0) as brand_id_135,if(brand_id=140,1,0) as brand_id_140,if(brand_id=145,1,0) as brand_id_145,
+-- if(compartment=1,1,0) as compartment_1,if(compartment=2,1,0) as compartment_2,if(compartment=3,1,0) as compartment_3,if(department_id=0,1,0) as department_id_0,if(department_id=1,1,0) as department_id_1,if(department_id=2,1,0) as department_id_2,
+-- if(department_id=3,1,0) as department_id_3,if(department_id=4,1,0) as department_id_4,if(department_id=5,1,0) as department_id_5,if(displacement=0,1,0) as displacement_0,if(displacement=1,1,0) as displacement_1,if(fuel_type_id=1,1,0) as fuel_type_id_1,
+-- if(if_mpv_id=0,1,0) as if_mpv_id_0,if(if_mpv_id=1,1,0) as if_mpv_id_1,if(level_id=0,1,0) as level_id_0,if(level_id=1,1,0) as level_id_1,if(level_id=2,1,0) as level_id_2,if(level_id=3,1,0) as level_id_3,if(level_id=4,1,0) as level_id_4,if(level_id=5,1,0) as level_id_5,
+-- if(level_id=6,1,0) as level_id_6,if(level_id=7,1,0) as level_id_7,if(type_id=1,1,0) as type_id_1,if(type_id=2,1,0) as type_id_2,if(type_id=3,1,0) as type_id_3,if(type_id=4,1,0) as type_id_4,
+-- (sale_10-sale_9)/(sale_10+sale_9) as trend_1,
+-- (sale_11-sale_10)/(sale_11+sale_10) as trend_2,
+-- (sale_12-sale_11)/(sale_12+sale_11) as trend_3,
+-- ((sale_10-sale_9)/(sale_10+sale_9)+(sale_11-sale_10)/(sale_11+sale_10)+(sale_12-sale_11)/(sale_12+sale_11))/3 as avg_trend,
+-- province_id,city_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_12
+-- from tem_2017_9_12_drop_null;
+
+
+
+-- drop offlinemodel if exists gbdt_first;
+-- drop table if exists gbdt_first_result;
+
+-- PAI 
+-- -name GBDT -project algo_public -DfeatureSplitValueMaxSize="500" -DlossType="3" -DrandSeed="0" -DnewtonStep="1" -Dshrinkage="0.03" -DmaxLeafCount="32" -DlabelColName="trend" -DinputTableName="train_first_enc" -DminLeafSampleCount="500" 
+-- -DsampleRatio="0.6" -DmaxDepth="10" -DmetricType="0" -DmodelName="gbdt_first" -DfeatureRatio="0.7" -Dp="1" -Dtau="0.7" -DtestRatio="0" 
+-- -DfeatureColNames="brand_id_8,brand_id_10,brand_id_11,brand_id_14,brand_id_15,brand_id_16,brand_id_17,brand_id_18,brand_id_25,brand_id_29,brand_id_30,brand_id_31,brand_id_35,brand_id_37,brand_id_42,brand_id_43,brand_id_50,brand_id_53,brand_id_56,brand_id_82,brand_id_86,brand_id_98,brand_id_99,brand_id_101,brand_id_103,brand_id_104,brand_id_110,brand_id_117,brand_id_126,brand_id_130,brand_id_132,brand_id_133,brand_id_135,brand_id_140,brand_id_145,compartment_1,compartment_2,compartment_3,department_id_0,department_id_1,department_id_2,department_id_3,department_id_4,department_id_5,displacement_0,displacement_1,fuel_type_id_1,if_mpv_id_0,if_mpv_id_1,level_id_0,level_id_1,level_id_2,level_id_3,level_id_4,level_id_5,level_id_6,level_id_7,type_id_1,type_id_2,type_id_3,type_id_4,trend_1,trend_2,trend_3,avg_trend"
+-- -DtreeCount="1000";
+
+-- PAI 
+-- -name prediction -project algo_public -DdetailColName="prediction_detail" -DmodelName="gbdt_first" -DresultColName="trend_result" -DoutputTableName="gbdt_first_result" -DscoreColName="prediction_score" -DinputTableName="test_first_enc" 
+-- -DappendColNames="city_id,province_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_12,trend_1,trend_2,trend_3";
+
+-- drop table if exists test_second;
+-- create table test_second as select gbdt_first_result.*,(trend_1+trend_2+trend_3+(if(trend_result>0.33,0.33,if(trend_result<-0.33,-0.33,trend_result))+if(trend_result<-1,-0.9,trend_result))/2)/4 as new_avg,
+-- (if(trend_result>0.33,0.33,if(trend_result<-0.33,-0.33,trend_result))+if(trend_result<-1,-0.9,trend_result))/2 as trend_4,
+-- sale_12*(1+(if(trend_result>0.33,0.33,if(trend_result<-0.33,-0.33,trend_result))+if(trend_result<-1,-0.9,trend_result))/2)/(1-(if(trend_result>0.33,0.33,if(trend_result<-0.33,-0.33,trend_result))+if(trend_result<-1,-0.9,trend_result))/2) as sale_1
+-- from gbdt_first_result;
+
+-- -- 第二部分训练集的制作
+-- drop table if exists tem_2016_9_2;
+-- create table tem_2016_9_2 as select tem_2016_9.province_id ,tem_2016_9.city_id ,tem_2016_9.class_id ,tem_2016_9.brand_id ,tem_2016_9.compartment ,tem_2016_9.department_id ,tem_2016_9.displacement ,
+-- tem_2016_9.fuel_type_id ,tem_2016_9.if_mpv_id ,tem_2016_9.level_id ,tem_2016_9.type_id ,tem_2016_9.sale_quantity as sale_9, tem_2016_10.sale_quantity as sale_10,tem_2016_11.sale_quantity as sale_11,tem_2016_12.sale_quantity as sale_12,
+-- tem_2017_1.sale_quantity as sale_1,tem_2017_2.sale_quantity as sale_2 from tem_2016_9 
+-- left join tem_2016_10 on tem_2016_9.province_id=tem_2016_10.province_id and tem_2016_9.city_id=tem_2016_10.city_id and tem_2016_9.class_id=tem_2016_10.class_id and tem_2016_9.brand_id=tem_2016_10.brand_id 
+-- and tem_2016_9.compartment=tem_2016_10.compartment and tem_2016_9.department_id=tem_2016_10.department_id and tem_2016_9.displacement=tem_2016_10.displacement and tem_2016_9.fuel_type_id=tem_2016_10.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2016_10.if_mpv_id and tem_2016_9.level_id=tem_2016_10.level_id and tem_2016_9.type_id=tem_2016_10.type_id 
+-- left join tem_2016_11 on tem_2016_9.province_id=tem_2016_11.province_id and tem_2016_9.city_id=tem_2016_11.city_id and tem_2016_9.class_id=tem_2016_11.class_id and tem_2016_9.brand_id=tem_2016_11.brand_id 
+-- and tem_2016_9.compartment=tem_2016_11.compartment and tem_2016_9.department_id=tem_2016_11.department_id and tem_2016_9.displacement=tem_2016_11.displacement and tem_2016_9.fuel_type_id=tem_2016_11.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2016_11.if_mpv_id and tem_2016_9.level_id=tem_2016_11.level_id and tem_2016_9.type_id=tem_2016_11.type_id 
+-- left join tem_2016_12 on tem_2016_9.province_id=tem_2016_12.province_id and tem_2016_9.city_id=tem_2016_12.city_id and tem_2016_9.class_id=tem_2016_12.class_id and tem_2016_9.brand_id=tem_2016_12.brand_id 
+-- and tem_2016_9.compartment=tem_2016_12.compartment and tem_2016_9.department_id=tem_2016_12.department_id and tem_2016_9.displacement=tem_2016_12.displacement and tem_2016_9.fuel_type_id=tem_2016_12.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2016_12.if_mpv_id and tem_2016_9.level_id=tem_2016_12.level_id and tem_2016_9.type_id=tem_2016_12.type_id
+-- left join tem_2017_1 on tem_2016_9.province_id=tem_2017_1.province_id and tem_2016_9.city_id=tem_2017_1.city_id and tem_2016_9.class_id=tem_2017_1.class_id and tem_2016_9.brand_id=tem_2017_1.brand_id 
+-- and tem_2016_9.compartment=tem_2017_1.compartment and tem_2016_9.department_id=tem_2017_1.department_id and tem_2016_9.displacement=tem_2017_1.displacement and tem_2016_9.fuel_type_id=tem_2017_1.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2017_1.if_mpv_id and tem_2016_9.level_id=tem_2017_1.level_id and tem_2016_9.type_id=tem_2017_1.type_id
+-- left join tem_2017_2 on tem_2016_9.province_id=tem_2017_2.province_id and tem_2016_9.city_id=tem_2017_2.city_id and tem_2016_9.class_id=tem_2017_2.class_id and tem_2016_9.brand_id=tem_2017_2.brand_id 
+-- and tem_2016_9.compartment=tem_2017_2.compartment and tem_2016_9.department_id=tem_2017_2.department_id and tem_2016_9.displacement=tem_2017_2.displacement and tem_2016_9.fuel_type_id=tem_2017_2.fuel_type_id 
+-- and tem_2016_9.if_mpv_id=tem_2017_2.if_mpv_id and tem_2016_9.level_id=tem_2017_2.level_id and tem_2016_9.type_id=tem_2017_2.type_id;
+
+-- drop table if exists tem_2014_9_2;
+-- create table tem_2014_9_2 as select tem_2014_9.province_id ,tem_2014_9.city_id ,tem_2014_9.class_id ,tem_2014_9.brand_id ,tem_2014_9.compartment ,tem_2014_9.department_id ,tem_2014_9.displacement ,
+-- tem_2014_9.fuel_type_id ,tem_2014_9.if_mpv_id ,tem_2014_9.level_id ,tem_2014_9.type_id ,tem_2014_9.sale_quantity as sale_9, tem_2014_10.sale_quantity as sale_10,tem_2014_11.sale_quantity as sale_11,tem_2014_12.sale_quantity as sale_12,
+-- tem_2015_1.sale_quantity as sale_1,tem_2015_2.sale_quantity as sale_2 from tem_2014_9 
+-- left join tem_2014_10 on tem_2014_9.province_id=tem_2014_10.province_id and tem_2014_9.city_id=tem_2014_10.city_id and tem_2014_9.class_id=tem_2014_10.class_id and tem_2014_9.brand_id=tem_2014_10.brand_id 
+-- and tem_2014_9.compartment=tem_2014_10.compartment and tem_2014_9.department_id=tem_2014_10.department_id and tem_2014_9.displacement=tem_2014_10.displacement and tem_2014_9.fuel_type_id=tem_2014_10.fuel_type_id 
+-- and tem_2014_9.if_mpv_id=tem_2014_10.if_mpv_id and tem_2014_9.level_id=tem_2014_10.level_id and tem_2014_9.type_id=tem_2014_10.type_id 
+-- left join tem_2014_11 on tem_2014_9.province_id=tem_2014_11.province_id and tem_2014_9.city_id=tem_2014_11.city_id and tem_2014_9.class_id=tem_2014_11.class_id and tem_2014_9.brand_id=tem_2014_11.brand_id 
+-- and tem_2014_9.compartment=tem_2014_11.compartment and tem_2014_9.department_id=tem_2014_11.department_id and tem_2014_9.displacement=tem_2014_11.displacement and tem_2014_9.fuel_type_id=tem_2014_11.fuel_type_id 
+-- and tem_2014_9.if_mpv_id=tem_2014_11.if_mpv_id and tem_2014_9.level_id=tem_2014_11.level_id and tem_2014_9.type_id=tem_2014_11.type_id 
+-- left join tem_2014_12 on tem_2014_9.province_id=tem_2014_12.province_id and tem_2014_9.city_id=tem_2014_12.city_id and tem_2014_9.class_id=tem_2014_12.class_id and tem_2014_9.brand_id=tem_2014_12.brand_id 
+-- and tem_2014_9.compartment=tem_2014_12.compartment and tem_2014_9.department_id=tem_2014_12.department_id and tem_2014_9.displacement=tem_2014_12.displacement and tem_2014_9.fuel_type_id=tem_2014_12.fuel_type_id 
+-- and tem_2014_9.if_mpv_id=tem_2014_12.if_mpv_id and tem_2014_9.level_id=tem_2014_12.level_id and tem_2014_9.type_id=tem_2014_12.type_id
+-- left join tem_2015_1 on tem_2014_9.province_id=tem_2015_1.province_id and tem_2014_9.city_id=tem_2015_1.city_id and tem_2014_9.class_id=tem_2015_1.class_id and tem_2014_9.brand_id=tem_2015_1.brand_id 
+-- and tem_2014_9.compartment=tem_2015_1.compartment and tem_2014_9.department_id=tem_2015_1.department_id and tem_2014_9.displacement=tem_2015_1.displacement and tem_2014_9.fuel_type_id=tem_2015_1.fuel_type_id 
+-- and tem_2014_9.if_mpv_id=tem_2015_1.if_mpv_id and tem_2014_9.level_id=tem_2015_1.level_id and tem_2014_9.type_id=tem_2015_1.type_id
+-- left join tem_2015_2 on tem_2014_9.province_id=tem_2015_2.province_id and tem_2014_9.city_id=tem_2015_2.city_id and tem_2014_9.class_id=tem_2015_2.class_id and tem_2014_9.brand_id=tem_2015_2.brand_id 
+-- and tem_2014_9.compartment=tem_2015_2.compartment and tem_2014_9.department_id=tem_2015_2.department_id and tem_2014_9.displacement=tem_2015_2.displacement and tem_2014_9.fuel_type_id=tem_2015_2.fuel_type_id 
+-- and tem_2014_9.if_mpv_id=tem_2015_2.if_mpv_id and tem_2014_9.level_id=tem_2015_2.level_id and tem_2014_9.type_id=tem_2015_2.type_id;
+
+drop table if exists train_second;
+create table train_second as select * from(select * from tem_2016_9_2 union all select * from tem_2014_9_2) as t;
+
+drop table if exists train_second_enc; -- 第二部分训练集的独热编码
+create table train_second_enc as select 
+if(brand_id=8,1,0) as brand_id_8,
+if(brand_id=10,1,0) as brand_id_10,
+if(brand_id=11,1,0) as brand_id_11,
+if(brand_id=13,1,0) as brand_id_13,
+if(brand_id=14,1,0) as brand_id_14,
+if(brand_id=15,1,0) as brand_id_15,
+if(brand_id=16,1,0) as brand_id_16,
+if(brand_id=17,1,0) as brand_id_17,
+if(brand_id=18,1,0) as brand_id_18,
+if(brand_id=23,1,0) as brand_id_23,
+if(brand_id=25,1,0) as brand_id_25,
+if(brand_id=29,1,0) as brand_id_29,
+if(brand_id=30,1,0) as brand_id_30,
+if(brand_id=31,1,0) as brand_id_31,
+if(brand_id=32,1,0) as brand_id_32,
+if(brand_id=35,1,0) as brand_id_35,
+if(brand_id=37,1,0) as brand_id_37,
+if(brand_id=38,1,0) as brand_id_38,
+if(brand_id=42,1,0) as brand_id_42,
+if(brand_id=43,1,0) as brand_id_43,
+if(brand_id=50,1,0) as brand_id_50,
+if(brand_id=53,1,0) as brand_id_53,
+if(brand_id=56,1,0) as brand_id_56,
+if(brand_id=57,1,0) as brand_id_57,
+if(brand_id=60,1,0) as brand_id_60,
+if(brand_id=67,1,0) as brand_id_67,
+if(brand_id=68,1,0) as brand_id_68,
+if(brand_id=79,1,0) as brand_id_79,
+if(brand_id=80,1,0) as brand_id_80,
+if(brand_id=82,1,0) as brand_id_82,
+if(brand_id=83,1,0) as brand_id_83,
+if(brand_id=86,1,0) as brand_id_86,
+if(brand_id=91,1,0) as brand_id_91,
+if(brand_id=94,1,0) as brand_id_94,
+if(brand_id=98,1,0) as brand_id_98,
+if(brand_id=99,1,0) as brand_id_99,
+if(brand_id=101,1,0) as brand_id_101,
+if(brand_id=103,1,0) as brand_id_103,
+if(brand_id=104,1,0) as brand_id_104,
+if(brand_id=108,1,0) as brand_id_108,
+if(brand_id=110,1,0) as brand_id_110,
+if(brand_id=117,1,0) as brand_id_117,
+if(brand_id=123,1,0) as brand_id_123,
+if(brand_id=126,1,0) as brand_id_126,
+if(brand_id=130,1,0) as brand_id_130,
+if(brand_id=132,1,0) as brand_id_132,
+if(brand_id=133,1,0) as brand_id_133,
+if(brand_id=135,1,0) as brand_id_135,
+if(brand_id=140,1,0) as brand_id_140,
+if(brand_id=141,1,0) as brand_id_141,
+if(brand_id=143,1,0) as brand_id_143,
+if(brand_id=145,1,0) as brand_id_145,
+if(compartment=1,1,0) as compartment_1,
+if(compartment=2,1,0) as compartment_2,
+if(compartment=3,1,0) as compartment_3,
+if(department_id=0,1,0) as department_id_0,
+if(department_id=1,1,0) as department_id_1,
+if(department_id=2,1,0) as department_id_2,
+if(department_id=3,1,0) as department_id_3,
+if(department_id=4,1,0) as department_id_4,
+if(department_id=5,1,0) as department_id_5,
+if(displacement=0,1,0) as displacement_0,
+if(displacement=1,1,0) as displacement_1,
+if(fuel_type_id=1,1,0) as fuel_type_id_1,
+if(fuel_type_id=2,1,0) as fuel_type_id_2,
+if(fuel_type_id=3,1,0) as fuel_type_id_3,
+if(if_mpv_id=0,1,0) as if_mpv_id_0,
+if(if_mpv_id=1,1,0) as if_mpv_id_1,
+if(level_id=0,1,0) as level_id_0,
+if(level_id=1,1,0) as level_id_1,
+if(level_id=2,1,0) as level_id_2,
+if(level_id=3,1,0) as level_id_3,
+if(level_id=4,1,0) as level_id_4,
+if(level_id=5,1,0) as level_id_5,
+if(level_id=6,1,0) as level_id_6,
+if(level_id=7,1,0) as level_id_7,
+if(type_id=1,1,0) as type_id_1,
+if(type_id=2,1,0) as type_id_2,
+if(type_id=3,1,0) as type_id_3,
+if(type_id=4,1,0) as type_id_4,
+(sale_10-sale_9)/(sale_10+sale_9) as trend_1,
+(sale_11-sale_10)/(sale_11+sale_10) as trend_2,
+(sale_12-sale_11)/(sale_12+sale_11) as trend_3,
+(sale_1-sale_12)/(sale_1+sale_12) as trend_4,
+(sale_2-sale_1)/(sale_1+sale_2) as trend,
+((sale_10-sale_9)/(sale_10+sale_9)+(sale_11-sale_10)/(sale_11+sale_10)+(sale_12-sale_11)/(sale_12+sale_11)+(sale_1-sale_12)/(sale_1+sale_12))/4 as new_avg
+from train_second;
+
+drop table if exists test_second_enc; -- 第二部分训练集的独热编码
+
+create table test_second_enc as select 
+if(brand_id=8,1,0) as brand_id_8,
+if(brand_id=10,1,0) as brand_id_10,
+if(brand_id=11,1,0) as brand_id_11,
+if(brand_id=13,1,0) as brand_id_13,
+if(brand_id=14,1,0) as brand_id_14,
+if(brand_id=15,1,0) as brand_id_15,
+if(brand_id=16,1,0) as brand_id_16,
+if(brand_id=17,1,0) as brand_id_17,
+if(brand_id=18,1,0) as brand_id_18,
+if(brand_id=23,1,0) as brand_id_23,
+if(brand_id=25,1,0) as brand_id_25,
+if(brand_id=29,1,0) as brand_id_29,
+if(brand_id=30,1,0) as brand_id_30,
+if(brand_id=31,1,0) as brand_id_31,
+if(brand_id=32,1,0) as brand_id_32,
+if(brand_id=35,1,0) as brand_id_35,
+if(brand_id=37,1,0) as brand_id_37,
+if(brand_id=38,1,0) as brand_id_38,
+if(brand_id=42,1,0) as brand_id_42,
+if(brand_id=43,1,0) as brand_id_43,
+if(brand_id=50,1,0) as brand_id_50,
+if(brand_id=53,1,0) as brand_id_53,
+if(brand_id=56,1,0) as brand_id_56,
+if(brand_id=57,1,0) as brand_id_57,
+if(brand_id=60,1,0) as brand_id_60,
+if(brand_id=67,1,0) as brand_id_67,
+if(brand_id=68,1,0) as brand_id_68,
+if(brand_id=79,1,0) as brand_id_79,
+if(brand_id=80,1,0) as brand_id_80,
+if(brand_id=82,1,0) as brand_id_82,
+if(brand_id=83,1,0) as brand_id_83,
+if(brand_id=86,1,0) as brand_id_86,
+if(brand_id=91,1,0) as brand_id_91,
+if(brand_id=94,1,0) as brand_id_94,
+if(brand_id=98,1,0) as brand_id_98,
+if(brand_id=99,1,0) as brand_id_99,
+if(brand_id=101,1,0) as brand_id_101,
+if(brand_id=103,1,0) as brand_id_103,
+if(brand_id=104,1,0) as brand_id_104,
+if(brand_id=108,1,0) as brand_id_108,
+if(brand_id=110,1,0) as brand_id_110,
+if(brand_id=117,1,0) as brand_id_117,
+if(brand_id=123,1,0) as brand_id_123,
+if(brand_id=126,1,0) as brand_id_126,
+if(brand_id=130,1,0) as brand_id_130,
+if(brand_id=132,1,0) as brand_id_132,
+if(brand_id=133,1,0) as brand_id_133,
+if(brand_id=135,1,0) as brand_id_135,
+if(brand_id=140,1,0) as brand_id_140,
+if(brand_id=141,1,0) as brand_id_141,
+if(brand_id=143,1,0) as brand_id_143,
+if(brand_id=145,1,0) as brand_id_145,
+if(compartment=1,1,0) as compartment_1,
+if(compartment=2,1,0) as compartment_2,
+if(compartment=3,1,0) as compartment_3,
+if(department_id=0,1,0) as department_id_0,
+if(department_id=1,1,0) as department_id_1,
+if(department_id=2,1,0) as department_id_2,
+if(department_id=3,1,0) as department_id_3,
+if(department_id=4,1,0) as department_id_4,
+if(department_id=5,1,0) as department_id_5,
+if(displacement=0,1,0) as displacement_0,
+if(displacement=1,1,0) as displacement_1,
+if(fuel_type_id=1,1,0) as fuel_type_id_1,
+if(fuel_type_id=2,1,0) as fuel_type_id_2,
+if(fuel_type_id=3,1,0) as fuel_type_id_3,
+if(if_mpv_id=0,1,0) as if_mpv_id_0,
+if(if_mpv_id=1,1,0) as if_mpv_id_1,
+if(level_id=0,1,0) as level_id_0,
+if(level_id=1,1,0) as level_id_1,
+if(level_id=2,1,0) as level_id_2,
+if(level_id=3,1,0) as level_id_3,
+if(level_id=4,1,0) as level_id_4,
+if(level_id=5,1,0) as level_id_5,
+if(level_id=6,1,0) as level_id_6,
+if(level_id=7,1,0) as level_id_7,
+if(type_id=1,1,0) as type_id_1,
+if(type_id=2,1,0) as type_id_2,
+if(type_id=3,1,0) as type_id_3,
+if(type_id=4,1,0) as type_id_4,
+trend_1,
+trend_2,
+trend_3,
+trend_4,
+new_avg,
+province_id,city_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_1
+from test_second;
+
+
+drop offlinemodel if exists gbdt_second;
+drop table if exists gbdt_second_result;
+
+PAI 
+-name GBDT -project algo_public -DfeatureSplitValueMaxSize="500" -DlossType="3" -DrandSeed="0" -DnewtonStep="1" -Dshrinkage="0.03" -DmaxLeafCount="32" -DlabelColName="trend" -DinputTableName="train_second_enc" -DminLeafSampleCount="500" 
+-DsampleRatio="0.6" -DmaxDepth="10" -DmetricType="0" -DmodelName="gbdt_second" -DfeatureRatio="0.7" -Dp="1" -Dtau="0.7" -DtestRatio="0" 
+-DfeatureColNames="brand_id_8,brand_id_10,brand_id_11,brand_id_13,brand_id_14,brand_id_15,brand_id_16,brand_id_17,brand_id_18,brand_id_23,brand_id_25,brand_id_29,brand_id_30,brand_id_31,brand_id_32,brand_id_35,brand_id_37,brand_id_38,brand_id_42,brand_id_43,brand_id_50,brand_id_53,brand_id_56,brand_id_57,brand_id_60,brand_id_67,brand_id_68,brand_id_79,brand_id_80,brand_id_82,brand_id_83,brand_id_86,brand_id_91,brand_id_94,brand_id_98,brand_id_99,brand_id_101,brand_id_103,brand_id_104,brand_id_108,brand_id_110,brand_id_117,brand_id_123,brand_id_126,brand_id_130,brand_id_132,brand_id_133,brand_id_135,brand_id_140,brand_id_141,brand_id_143,brand_id_145,compartment_1,compartment_2,compartment_3,department_id_0,department_id_1,department_id_2,department_id_3,department_id_4,department_id_5,displacement_0,displacement_1,fuel_type_id_1,fuel_type_id_2,fuel_type_id_3,if_mpv_id_0,if_mpv_id_1,level_id_0,level_id_1,level_id_2,level_id_3,level_id_4,level_id_5,level_id_6,level_id_7,type_id_1,type_id_2,type_id_3,type_id_4,trend_1,trend_2,trend_3,trend_4,new_avg" 
+-DtreeCount="1000";
+
+PAI 
+-name prediction -project algo_public -DdetailColName="prediction_detail" -DmodelName="gbdt_second" -DresultColName="prediction_result" -DoutputTableName="gbdt_second_result" -DscoreColName="prediction_score" -DinputTableName="test_second_enc" 
+-DappendColNames="city_id,province_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_1";
+
+
+drop table if exists predict_final_pro;
+create table predict_final_pro as select province_id,city_id,class_id,if(prediction_result<-1,(1-0.9)*sale_1/(1+0.9),(1+prediction_result)*sale_1/(1-prediction_result)) as predict_number from gbdt_second_result;
+
+drop table if exists predict_final;
+create table predict_final as select province_id,city_id,class_id,sum(predict_number) as predict_number from predict_final_pro group by province_id,city_id,class_id;
+
+drop table if exists result_final_simple;
+create table result_final_simple as select yc_result_sample_b.predict_date,yc_result_sample_b.province_id,yc_result_sample_b.city_id,yc_result_sample_b.class_id,
+if(predict_number is not null,predict_number,predict_quantity) as predict_number from yc_result_sample_b 
+left join predict_final on yc_result_sample_b.province_id=predict_final.province_id and yc_result_sample_b.city_id=predict_final.city_id and yc_result_sample_b.class_id=predict_final.class_id;
+
+drop table if exists predict_final_pro;
+drop table if exists predict_final;

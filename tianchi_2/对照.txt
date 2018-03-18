@@ -1,0 +1,291 @@
+--填充所有机器学习跑不出来的结果，或者填充部分数据交给机器学习。true代表脱敏，real代表去掉结果不要求预测的数据集
+--1.填充9-12月全部缺失的数据 
+--1.1所有数据导入一遍
+drop table if exists yc_passenger_car_sales; 
+drop table if exists yc_passenger_car_yields;
+drop table if exists yc_macro_econ;
+drop table if exists yc_result_sample_a;
+create table  yc_passenger_car_sales as select * from odps_tc_257100_f673506e024.yc_passenger_car_sales;
+create table  yc_passenger_car_yields as select * from odps_tc_257100_f673506e024.yc_passenger_car_yields;
+create table  yc_macro_econ as select * from odps_tc_257100_f673506e024.yc_macro_econ;
+create table  yc_result_sample_a as select * from odps_tc_257100_f673506e024.yc_result_sample_a;
+--1.2 先写出所有中间可能会用到的各种表
+--1.2.1脱敏后的数据集，结果表true_train,脱敏系数表ratio,系数ratio
+drop table if exists all_divisor;  ----
+create table all_divisor as select  
+yc_passenger_car_sales.city_id,yc_passenger_car_sales.class_id,yc_passenger_car_sales.sale_quantity,
+(sale_quantity % 2) as divisor_2,(sale_quantity % 3) as divisor_3,
+(sale_quantity % 5) as divisor_5,(sale_quantity % 7) as divisor_7
+from yc_passenger_car_sales group by city_id,class_id,sale_quantity;
+drop table if exists divisor_sum; ----
+create table divisor_sum as select city_id,class_id,sum(divisor_2) as sum2,sum(divisor_3) as sum3,
+sum(divisor_5) as sum5,sum(divisor_7) as sum7 from all_divisor group by city_id,class_id;
+drop table if exists class_id_divisor; ----
+create table class_id_divisor as select divisor_sum.city_id,divisor_sum.class_id,
+(case when sum2 = 0 then  2 when sum3 = 0 then  3 when sum5 =0 then  5 when sum7 = 0 then  7
+else NULL end ) as divisor from divisor_sum;
+drop table if exists ratio;  ----求出系数表
+create table ratio as select city_id,class_id,if(divisor is NULL,1,divisor) as ratio from class_id_divisor;
+drop table if exists true_train;   ---真实训练集，真实销量为sale_quantity_2
+create table true_train as select yc_passenger_car_sales.*,(yc_passenger_car_sales.sale_quantity/ratio) as sale_quantity_2
+from yc_passenger_car_sales left join ratio on
+yc_passenger_car_sales.city_id = ratio.city_id and
+yc_passenger_car_sales.class_id = ratio.class_id;
+drop table all_divisor; --删去中间结果
+drop table divisor_sum;
+drop table class_id_divisor;
+--1.2.2真实要求预测的9w多条记录对应的训练集real_train
+drop table if exists real_train_1; 
+create table real_train_1 as select yc_passenger_car_sales.* ,yc_result_sample_a.predict_date as nouse
+from yc_passenger_car_sales left outer join yc_result_sample_a 
+on yc_passenger_car_sales.class_id = yc_result_sample_a.class_id 
+and yc_passenger_car_sales.city_id = yc_result_sample_a.city_id;
+drop table if exists real_train;  --先求出所要求预测的9w条记录的训练集
+create table real_train as select * from real_train_1 where nouse is not null;
+drop table if exists real_train_1; --删去中间结果
+--1.2.3不同车型同一款车对应的求和，包括原始数据集，真实数据集和脱敏后的数据集
+drop table if exists class_converge; --原始数据集
+create table class_converge as select sale_date,province_id,city_id,class_id,brand_id,sum(sale_quantity) as sale_quantity
+from yc_passenger_car_sales  group by sale_date,province_id,city_id,class_id,brand_id;
+drop table if exists class_converge_real; --去掉结果不要求预测的数据集
+create table class_converge_real as select sale_date,province_id,city_id,class_id,brand_id,sum(sale_quantity) as sale_quantity
+from real_train group by sale_date,province_id,city_id,class_id,brand_id;
+drop table if exists class_converge_true; --脱敏后的数据集
+create table class_converge_true as select sale_date,province_id,city_id,class_id,brand_id,sum(sale_quantity_2) as sale_quantity
+from true_train group by sale_date,province_id,city_id,class_id,brand_id;
+--1.2.4每个城市2017年的购买力表buy_power
+drop table if exists buy_power_1; --找出每个城市的购买力，利用脱敏后的数据
+create table buy_power_1 as select city_id ,sum(sale_quantity_2) as sum_quantity,1 as nouse from true_train 
+where sale_date between 201701 and 201712 group by city_id;
+drop table if exists buy_power_2;
+create table buy_power_2 as select sum(sum_quantity) as all_quantity, 1 as nouse from buy_power_1;
+drop table if exists buy_power;
+create table buy_power as select buy_power_1.city_id,sum_quantity/all_quantity as buy_power
+from buy_power_1 left outer join  buy_power_2 on buy_power_1.nouse = buy_power_2.nouse;
+drop table if exists buy_power_1; --删去中间结果
+drop table if exists buy_power_2;
+--1.3找出9-12月完全缺失的数据，表loss_2398
+drop table if exists  missing_tem_1; --先找在2017年9月到12月之间的所有城市对应的class_id
+create table missing_tem_1 as  select * from class_converge_true where sale_date between 201709 and 201712;
+drop table if exists  missing_tem_2; --找上表和原始集合的差集,使用左外连接
+create table missing_tem_2 as select class_converge_true.province_id,class_converge_true.city_id,
+class_converge_true.class_id,missing_tem_1.class_id as class_id_1
+from class_converge_true left outer join  missing_tem_1
+on class_converge_true.city_id = missing_tem_1.city_id and class_converge_true.class_id = missing_tem_1.class_id;
+drop table if exists  loss_2398; --得出9-12月都没出现过的城市及其对应的class_id，得出所有要处理的结果
+create table loss_2398 as select distinct * from missing_tem_2 where class_id_1 is null;
+drop table if exists  missing_tem_1; --删去中间结果
+drop table if exists  missing_tem_2; 
+--1.3.1缺失数据中在2017年内出现过按照最早出现的月份进行填充，填充结果表loss_1774_result
+drop table if exists missing_tem_1; --先找出2398条数据中在2017年内出现过的
+create table missing_tem_1 as select class_converge.sale_date,class_converge.province_id,class_converge.city_id,class_converge.class_id
+from class_converge,loss_2398 where class_converge.sale_date >201700
+and class_converge.city_id = loss_2398.city_id 
+and class_converge.class_id = loss_2398.class_id;
+drop table if exists missing_tem_2; --找最小的日期
+create table missing_tem_2 as select min(sale_date)as sale_date, province_id,city_id,class_id
+from missing_tem_1  group by province_id,city_id,class_id;
+drop table if exists loss_1774_result;
+create table loss_1774_result as select missing_tem_2.*,class_converge.sale_quantity as predict_quantity
+from missing_tem_2,class_converge where missing_tem_2.sale_date = class_converge.sale_date and
+missing_tem_2.class_id = class_converge.class_id and missing_tem_2.city_id = class_converge.city_id;
+drop table if exists missing_tem_1; --删去中间结果
+drop table if exists missing_tem_2; 
+--1.3.2缺失数据在2017年从未出现过，目前先补最后出现的一个月的销量loss_624_result
+drop table if exists missing_tem_1;
+create table missing_tem_1 as select loss_2398.*,loss_1774_result.predict_quantity as predict_quantity
+from loss_2398 left outer join loss_1774_result on loss_2398.city_id = loss_1774_result.city_id
+and loss_2398.class_id = loss_1774_result.class_id;
+drop table if exists loss_624; --找出了省市和车
+create table loss_624 as select province_id,city_id,class_id from missing_tem_1 where predict_quantity is null;
+drop table if exists missing_tem_3; --先拼出销量和日期
+create table missing_tem_3 as select class_converge.sale_date,class_converge.province_id,class_converge.city_id,class_converge.class_id
+from class_converge,loss_624 where class_converge.city_id = loss_624.city_id 
+and class_converge.class_id = loss_624.class_id;
+drop table if exists missing_tem_4; --找最近的日期
+create table missing_tem_4 as select max(sale_date)as sale_date, province_id,city_id,class_id
+from missing_tem_3  group by province_id,city_id,class_id;
+drop table if exists loss_624_result;
+create table loss_624_result as select missing_tem_4.*,class_converge.sale_quantity as predict_quantity
+from missing_tem_4,class_converge where missing_tem_4.sale_date = class_converge.sale_date and
+missing_tem_4.class_id = class_converge.class_id and missing_tem_4.city_id = class_converge.city_id;
+drop table if exists missing_tem_1;--删去中间结果
+drop table if exists loss_624;
+drop table if exists missing_tem_3;
+drop table if exists missing_tem_4;
+--2.从未在训练集中出现的新车的填充结果
+--2.1找出这些车，表loss_1510
+drop table if exists loss_1510_tem;
+drop table if exists loss_1510;
+create table loss_1510_tem as select yc_result_sample_a.province_id,yc_result_sample_a .city_id,yc_result_sample_a .class_id,yc_passenger_car_sales.sale_quantity as predict_quantity 
+from yc_result_sample_a left join yc_passenger_car_sales  
+on  yc_result_sample_a.province_id = yc_passenger_car_sales.province_id
+and yc_result_sample_a.city_id = yc_passenger_car_sales.city_id
+and yc_result_sample_a.class_id = yc_passenger_car_sales.class_id;
+create table loss_1510 as select distinct * from loss_1510_tem  where predict_quantity is NULL; 
+drop table if exists  loss_1510_tem;--删去中间结果
+--2.2填充方式先去掉201701年以前出现的
+--2.2.1找出对应城市对应日期和销量
+drop table if exists loss_1510_1; --找对应城市
+create table loss_1510_1 as select loss_1510.city_id,loss_1510.class_id,yc_passenger_car_sales.city_id as sell_city_id
+from loss_1510 left join yc_passenger_car_sales on yc_passenger_car_sales.class_id = loss_1510.class_id;
+drop table if exists loss_1510_2; --找对应日期
+create table loss_1510_2 as select loss_1510_1.*,(min(yc_passenger_car_sales.sale_date)) as start_date
+from loss_1510_1,yc_passenger_car_sales
+where yc_passenger_car_sales.city_id = loss_1510_1.sell_city_id
+and  yc_passenger_car_sales.class_id = loss_1510_1.class_id
+group by loss_1510_1.city_id,loss_1510_1.class_id,loss_1510_1.sell_city_id;
+drop table if exists loss_1510_3; --找对应销量
+create table loss_1510_3 as select loss_1510_2.*,(sum(yc_passenger_car_sales.sale_quantity)) as start_quantity
+from loss_1510_2,yc_passenger_car_sales 
+where  yc_passenger_car_sales.city_id = loss_1510_2.sell_city_id
+and yc_passenger_car_sales.sale_date = loss_1510_2.start_date
+and yc_passenger_car_sales.class_id = loss_1510_2.class_id
+group by loss_1510_2.city_id,loss_1510_2.class_id,loss_1510_2.sell_city_id,loss_1510_2.start_date;
+drop table if exists  loss_1510_1;--删去中间结果
+drop table if exists  loss_1510_2; --删去中间结果
+--2.2.2先去掉对应日期中小于201701的记录
+drop table if exists loss_1510_tem1; --先去掉对应日期中小于201701的记录
+create table loss_1510_tem1 as select * from loss_1510_3 where start_date>201700;
+drop table if exists loss_1510_tem2; --拼接自身购买力
+create table loss_1510_tem2 as select loss_1510_tem1.*,buy_power.buy_power as buy_power_me
+from loss_1510_tem1 left outer join buy_power on loss_1510_tem1.city_id = buy_power.city_id;
+drop table if exists loss_1510_tem3; --拼接对应城市的购买力
+create table loss_1510_tem3 as select loss_1510_tem2.*,buy_power.buy_power as buy_power_it
+from loss_1510_tem2 left outer join buy_power on loss_1510_tem2.sell_city_id = buy_power.city_id;
+drop table if exists loss_1510_tem4; --按照购买力比例计算销量
+create table loss_1510_tem4 as select loss_1510_tem3.*,(buy_power_me/buy_power_it)*start_quantity as avg_quantity
+from loss_1510_tem3;
+drop table if exists loss_1510_tem5; --求均值，但是这里只有1507条记录,另外三条记录需要
+create table loss_1510_tem5 as select city_id,class_id,avg(avg_quantity) as predict_quantity 
+from loss_1510_tem4 group by city_id,class_id;
+drop table if exists loss_1510_tem6; --求另外三条记录的值
+create table loss_1510_tem6 as select city_id,class_id,start_quantity as predict_quantity from loss_1510_3 where 
+(city_id =186 and class_id =10099 and start_quantity=4) or
+(city_id =97 and class_id =10954 and start_quantity=3) or
+(city_id =145 and class_id =10221 and start_quantity=5);
+drop table if exists loss_1510_tem7; --去重
+create table loss_1510_tem7 as select distinct * from loss_1510_tem6;
+drop table if exists loss_1510_result; --合并5和7
+create table loss_1510_result as select city_id,class_id,predict_quantity from loss_1510_tem5 
+union select city_id,class_id,predict_quantity from loss_1510_tem7;
+drop table if exists loss_1510_3;
+drop table if exists loss_1510_tem1; --删去中间结果
+drop table if exists loss_1510_tem2;
+drop table if exists loss_1510_tem3;
+drop table if exists loss_1510_tem4;
+drop table if exists loss_1510_tem5;
+drop table if exists loss_1510_tem6;
+drop table if exists loss_1510_tem7;
+-- --3.找在2017年9，10，11，12中间断出现的
+-- --3.1列出后面可能会用到的各种表
+-- --3.2找出机器学习可以跑的第一部分，2017年9-12月全部有的test_1,同时选出训练集train_1
+-- --3.3找出机器学习可以跑的第二部分，12 or 11,12 or 10,11,12
+-- --3.3.1找只有2017年12月,test_2,同时选出训练集train_2
+--3.3.2找只有2017年12月和11月的,test_3,同时选出训练集train_3
+--3.3.3找只有2017年12月和11月和10月的,test_4,同时选出训练集train_4
+--3.4求2017年9-12月不连续缺失的部分，共11种情况
+--3.4.1能加入测试集的3种形式部分补全,然后加入test_5,同时选出训练集train_5，
+--3.4.1.1不能加入训练的8种形式loss_7330
+drop table if exists missing_tem_1; --先把所有在9-12月区间的记录取出来
+create table missing_tem_1 as select * from class_converge_real where sale_date>201708;
+drop table if exists missing_tem_2; --对其中的月份进行计数
+create table missing_tem_2 as select province_id,city_id,class_id,count(sale_date) as num from missing_tem_1 group by province_id,city_id,class_id;
+drop table if exists missing_tem_3; --还原月份
+create table missing_tem_3 as select missing_tem_1.sale_date as sale_date,missing_tem_2.province_id,missing_tem_2.city_id,missing_tem_2.class_id,
+missing_tem_2.num from missing_tem_2 left join missing_tem_1 on missing_tem_2.province_id = missing_tem_1.province_id
+and missing_tem_2.class_id = missing_tem_1.class_id
+and missing_tem_2.city_id = missing_tem_1.city_id;
+drop table if exists missing_tem_4_1; --选出月份个数小于4条的记录
+create table missing_tem_4_1 as select sale_date,city_id,class_id,num from missing_tem_3 where num<4;
+drop table if exists missing_tem_4_2; --取出有2017年12月的记录
+create table missing_tem_4_2 as select * from missing_tem_3 where num<4 and sale_date=201712;
+drop table if exists missing_tem_4_3; --左外连接
+create table missing_tem_4_3 as select missing_tem_4_1.*,missing_tem_4_2.num as nouse from missing_tem_4_1 left outer join missing_tem_4_2 on 
+missing_tem_4_1.class_id = missing_tem_4_2.class_id and missing_tem_4_1.city_id = missing_tem_4_2.city_id;
+drop table if exists missing_tem_4; --求出结果，共7条记录
+create table missing_tem_4 as select distinct * from missing_tem_4_3 where nouse is null;
+drop table if exists missing_tem_5; --找出有两条记录且有2017年12月这种情况
+create table missing_tem_5 as select * from missing_tem_3 where num=2 and sale_date =201712;
+drop table if exists missing_tem_6; --找出有两条记录且有2017年9月这种情况
+create table missing_tem_6 as select * from missing_tem_3 where num=2 and sale_date =201709;
+drop table if exists missing_tem_7; --找出只有2017年9月和12月这种情况
+create table missing_tem_7 as select missing_tem_5.* from missing_tem_5,missing_tem_6 where missing_tem_5.city_id = missing_tem_6.city_id
+and missing_tem_5.class_id = missing_tem_6.class_id;
+drop table if exists missing_tem_8; --合并4和7
+create table missing_tem_8 as select city_id,class_id from missing_tem_4 union select city_id,class_id from  missing_tem_7;
+drop table if exists loss_7330; --去重，只剩下city_id,class_id
+create table loss_7330 as select distinct * from missing_tem_8;
+drop table if exists missing_tem_1;--删去中间结果
+drop table if exists missing_tem_2;
+drop table if exists missing_tem_3;
+drop table if exists missing_tem_4_1;
+drop table if exists missing_tem_4_2;
+drop table if exists missing_tem_4_3; 
+drop table if exists missing_tem_4;
+drop table if exists missing_tem_5;
+drop table if exists missing_tem_6;
+drop table if exists missing_tem_7;
+drop table if exists missing_tem_8;
+
+--3.4.1.2不能加入训练的8种形式loss_7330_result
+drop table if exists missing_tem_1; --先拼出销量和日期
+create table missing_tem_1 as select class_converge.sale_date,class_converge.province_id,class_converge.city_id,class_converge.class_id
+from class_converge,loss_7330 where class_converge.city_id = loss_7330.city_id 
+and class_converge.class_id = loss_7330.class_id;
+drop table if exists missing_tem_2; --找最近的日期
+create table missing_tem_2 as select max(sale_date)as sale_date,province_id,city_id,class_id
+from missing_tem_1  group by province_id,city_id,class_id;
+drop table if exists loss_7330_result;
+create table loss_7330_result as select missing_tem_2.*,class_converge.sale_quantity as predict_quantity
+from missing_tem_2,class_converge where missing_tem_2.sale_date = class_converge.sale_date and
+missing_tem_2.class_id = class_converge.class_id and missing_tem_2.city_id = class_converge.city_id;
+drop table if exists missing_tem_1; --删去中间结果
+drop table if exists missing_tem_2;
+
+-- 5.融合结果表,先将所有规则猜出来的结果进行填充
+drop table if exists result_guess_1; --将所有填充的结果融为result_guess，但是有1510个数据目前还没填充，所有可能会报错
+create table result_guess_1 as select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,
+yc_result_sample_a.class_id,if(yc_result_sample_a.predict_quantity is null,loss_1774_result.predict_quantity,yc_result_sample_a.predict_quantity) as predict_quantity
+from yc_result_sample_a left join loss_1774_result on yc_result_sample_a.class_id = loss_1774_result.class_id and yc_result_sample_a.city_id = loss_1774_result.city_id;
+drop table if exists result_guess_2; 
+create table result_guess_2 as select result_guess_1.predict_date,result_guess_1.province_id,result_guess_1.city_id,
+result_guess_1.class_id,if(result_guess_1.predict_quantity is null,loss_624_result.predict_quantity,result_guess_1.predict_quantity) as predict_quantity
+from result_guess_1 left join loss_624_result on result_guess_1.class_id = loss_624_result.class_id and result_guess_1.city_id = loss_624_result.city_id;
+drop table if exists result_guess_3; 
+create table result_guess_3 as select result_guess_2.predict_date,result_guess_2.province_id,result_guess_2.city_id,
+result_guess_2.class_id,if(result_guess_2.predict_quantity is null,loss_7330_result.predict_quantity,result_guess_2.predict_quantity) as predict_quantity
+from result_guess_2 left join loss_7330_result on result_guess_2.class_id = loss_7330_result.class_id and result_guess_2.city_id = loss_7330_result.city_id;
+drop table if exists result_guess; --将所有填充的结果融为result_guess，但是有1510个数据目前还没填充，所有可能会报错
+create table result_guess as select result_guess_3.predict_date,result_guess_3.province_id,result_guess_3.city_id,
+result_guess_3.class_id,if(result_guess_3.predict_quantity is null,loss_1510_result.predict_quantity,result_guess_3.predict_quantity) as predict_quantity
+from result_guess_3 left join loss_1510_result on result_guess_3.class_id = loss_1510_result.class_id and result_guess_3.city_id = loss_1510_result.city_id;
+drop table if exists result_guess_1; --删去中间结果
+drop table if exists result_guess_2; 
+drop table if exists result_guess_3; 
+--删去中间需要但是最后没用的表
+drop table if exists true_train; 
+drop table if exists real_train; 
+drop table if exists ratio; 
+drop table if exists class_converge;
+drop table if exists class_converge_real; 
+drop table if exists class_converge_true; 
+drop table if exists buy_power;
+drop table if exists  loss_2398;
+drop table if exists loss_1510;
+drop table if exists loss_7330;
+drop table if exists loss_1510_3;
+--6.检查结果
+drop table if exists test; --检验结果
+create table test as select yc_result_sample_a.*, yc_result_submit_a.predict_quantity as num
+from yc_result_sample_a left outer join yc_result_submit_a  
+on  yc_result_sample_a.predict_date = yc_result_submit_a.predict_date
+and yc_result_sample_a.province_id = yc_result_submit_a.province_id
+and yc_result_sample_a.city_id = yc_result_submit_a.city_id
+and yc_result_sample_a.class_id = yc_result_submit_a.class_id;
+select * from test where num is null;
+select * from yc_result_submit_a  where predict_quantity is null;
+select count(*) from yc_result_submit_a;
+select * from yc_result_submit_a  where predict_quantity<0;
+select * from yc_result_submit_a  where predict_quantity<1;
+

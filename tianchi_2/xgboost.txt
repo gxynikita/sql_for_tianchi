@@ -1,0 +1,510 @@
+-- -- drop table  if exists tem_split_pro;
+-- -- create table tem_split_pro as select cast(sale_date as bigint) as sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , 
+-- -- if(displacement is null,0,if (cast(substr(displacement,1,3) as bigint)>1.6,1,0) ) as 
+-- -- displacement ,compartment ,fuel_type_id,sale_quantity from yc_passenger_car_sales;
+
+-- -- drop table if exists tem_split;
+-- -- create table tem_split as select sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , displacement ,compartment ,fuel_type_id,sum(sale_quantity) as sale_quantity 
+-- -- from tem_split_pro group by sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , displacement ,compartment ,fuel_type_id;
+
+-- -- drop table if exists tem_split_lead_1;
+-- -- create table tem_split_lead_1 as select  if(sale_date%100=12,sale_date+101-12,sale_date+1) as sale_date,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id ,if_MPV_id , displacement ,
+-- -- compartment ,fuel_type_id,sale_quantity from tem_split ;
+
+-- -- drop table if exists tem_trend_lead;
+-- -- create table tem_trend_lead as select tem_split.sale_date ,tem_split.province_id ,tem_split.city_id ,tem_split.class_id ,tem_split.brand_id ,tem_split.type_id ,tem_split.level_id ,tem_split.department_id,
+-- -- tem_split.if_MPV_id , tem_split.displacement ,tem_split.compartment ,tem_split.fuel_type_id,
+-- -- (tem_split.sale_quantity-tem_split_lead_1.sale_quantity)/(tem_split.sale_quantity+tem_split_lead_1.sale_quantity) as trend  from tem_split left join tem_split_lead_1 on
+-- -- tem_split.sale_date = tem_split_lead_1.sale_date and tem_split.province_id = tem_split_lead_1.province_id and tem_split.city_id = tem_split_lead_1.city_id and tem_split.class_id = tem_split_lead_1.class_id 
+-- -- and tem_split.brand_id = tem_split_lead_1.brand_id and tem_split.type_id = tem_split_lead_1.type_id and tem_split.level_id = tem_split_lead_1.level_id and tem_split.department_id = tem_split_lead_1.department_id
+-- -- and tem_split.if_MPV_id = tem_split_lead_1.if_MPV_id and tem_split.displacement = tem_split_lead_1.displacement and tem_split.compartment = tem_split_lead_1.compartment 
+-- -- and  tem_split.fuel_type_id = tem_split_lead_1.fuel_type_id;
+
+-- -- drop table if exists tem_split_lead_2;
+-- -- create table tem_split_lead_2 as select  if(sale_date%100=12,sale_date+102-12,if(sale_date%100=11,sale_date+101-11,sale_date+2)) as sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,
+-- -- department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,sale_quantity from tem_split ;
+
+-- -- drop table if exists tem_trend_lead_1;
+-- -- create table tem_trend_lead_1 as select tem_split_lead_1.sale_date ,tem_split_lead_1.province_id , tem_split_lead_1.city_id ,tem_split_lead_1.class_id ,tem_split_lead_1.brand_id ,tem_split_lead_1.type_id ,
+-- -- tem_split_lead_1.level_id ,tem_split_lead_1.department_id,tem_split_lead_1.if_MPV_id , tem_split_lead_1.displacement ,tem_split_lead_1.compartment ,tem_split_lead_1.fuel_type_id,
+-- -- (tem_split_lead_1.sale_quantity-tem_split_lead_2.sale_quantity)/(tem_split_lead_1.sale_quantity+tem_split_lead_2.sale_quantity) as trend  from tem_split_lead_1 left join tem_split_lead_2 on
+-- -- tem_split_lead_2.sale_date = tem_split_lead_1.sale_date and tem_split_lead_2.province_id = tem_split_lead_1.province_id and tem_split_lead_2.city_id = tem_split_lead_1.city_id 
+-- -- and tem_split_lead_2.class_id = tem_split_lead_1.class_id and tem_split_lead_2.brand_id = tem_split_lead_1.brand_id and tem_split_lead_2.type_id = tem_split_lead_1.type_id 
+-- -- and tem_split_lead_2.level_id = tem_split_lead_1.level_id and tem_split_lead_2.department_id = tem_split_lead_1.department_id and tem_split_lead_2.if_MPV_id = tem_split_lead_1.if_MPV_id 
+-- -- and tem_split_lead_2.displacement = tem_split_lead_1.displacement and tem_split_lead_2.compartment = tem_split_lead_1.compartment and  tem_split_lead_2.fuel_type_id = tem_split_lead_1.fuel_type_id;
+
+-- -- drop table if exists tem_split_lead_3;
+-- -- create table tem_split_lead_3 as select  if(sale_date%100=12,sale_date+103-12,if(sale_date%100=11,sale_date+102-11,if(sale_date%100=10,sale_date+101-10,sale_date+3))) as sale_date ,province_id , city_id ,
+-- -- class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,sale_quantity from tem_split ;
+
+-- -- drop table if exists tem_trend_lead_2;
+-- -- create table tem_trend_lead_2 as select tem_split_lead_2.sale_date ,tem_split_lead_2.province_id , tem_split_lead_2.city_id ,tem_split_lead_2.class_id ,tem_split_lead_2.brand_id ,tem_split_lead_2.type_id ,
+-- -- tem_split_lead_2.level_id ,tem_split_lead_2.department_id,tem_split_lead_2.if_MPV_id , tem_split_lead_2.displacement ,tem_split_lead_2.compartment ,tem_split_lead_2.fuel_type_id,
+-- -- (tem_split_lead_2.sale_quantity-tem_split_lead_3.sale_quantity)/(tem_split_lead_2.sale_quantity+tem_split_lead_3.sale_quantity) as trend  from tem_split_lead_2 left join tem_split_lead_3 on
+-- -- tem_split_lead_2.sale_date = tem_split_lead_3.sale_date and tem_split_lead_2.province_id = tem_split_lead_3.province_id and tem_split_lead_2.city_id = tem_split_lead_3.city_id 
+-- -- and tem_split_lead_2.class_id = tem_split_lead_3.class_id and tem_split_lead_2.brand_id = tem_split_lead_3.brand_id and tem_split_lead_2.type_id = tem_split_lead_3.type_id 
+-- -- and tem_split_lead_2.level_id = tem_split_lead_3.level_id and tem_split_lead_2.department_id = tem_split_lead_3.department_id and tem_split_lead_2.if_MPV_id = tem_split_lead_3.if_MPV_id 
+-- -- and tem_split_lead_2.displacement = tem_split_lead_3.displacement and tem_split_lead_2.compartment = tem_split_lead_3.compartment and  tem_split_lead_2.fuel_type_id = tem_split_lead_3.fuel_type_id;
+
+-- -- drop table if exists tem_split_lead_4;
+-- -- create table tem_split_lead_4 as select  if(sale_date%100=12,sale_date+104-12,if(sale_date%100=11,sale_date+103-11,if(sale_date%100=10,sale_date+102-10,if(sale_date%100=9,sale_date+101-9,sale_date+4))))
+-- -- as sale_date ,province_id , city_id ,class_id ,brand_id ,type_id ,level_id ,department_id,if_MPV_id , displacement ,compartment ,fuel_type_id,sale_quantity from tem_split ;
+
+-- -- drop table if exists tem_trend_lead_3;
+-- -- create table tem_trend_lead_3 as select tem_split_lead_3.sale_date ,tem_split_lead_3.province_id , tem_split_lead_3.city_id ,tem_split_lead_3.class_id ,tem_split_lead_3.brand_id ,tem_split_lead_3.type_id ,
+-- -- tem_split_lead_3.level_id ,tem_split_lead_3.department_id,tem_split_lead_3.if_MPV_id , tem_split_lead_3.displacement ,tem_split_lead_3.compartment ,tem_split_lead_3.fuel_type_id,
+-- -- (tem_split_lead_3.sale_quantity-tem_split_lead_4.sale_quantity)/(tem_split_lead_3.sale_quantity+tem_split_lead_4.sale_quantity) as trend  from tem_split_lead_3 left join tem_split_lead_4 on
+-- -- tem_split_lead_3.sale_date = tem_split_lead_4.sale_date and tem_split_lead_3.province_id = tem_split_lead_4.province_id and tem_split_lead_3.city_id = tem_split_lead_4.city_id 
+-- -- and tem_split_lead_3.class_id = tem_split_lead_4.class_id and tem_split_lead_3.brand_id = tem_split_lead_4.brand_id and tem_split_lead_3.type_id = tem_split_lead_4.type_id 
+-- -- and tem_split_lead_3.level_id = tem_split_lead_4.level_id and tem_split_lead_3.department_id = tem_split_lead_4.department_id and tem_split_lead_3.if_MPV_id = tem_split_lead_4.if_MPV_id 
+-- -- and tem_split_lead_3.displacement = tem_split_lead_4.displacement and tem_split_lead_3.compartment = tem_split_lead_4.compartment and  tem_split_lead_3.fuel_type_id = tem_split_lead_4.fuel_type_id;
+
+
+
+-- drop table if exists tem_trend_final_pro_0;
+-- create table tem_trend_final_pro_0 as select tem_split.sale_date ,tem_split.province_id ,tem_split.city_id ,tem_split.brand_id ,tem_split.class_id ,tem_split.compartment ,tem_split.department_id ,
+-- tem_split.displacement ,tem_split.fuel_type_id ,tem_split.if_mpv_id ,tem_split.level_id ,tem_split.type_id ,tem_split.sale_quantity ,tem_trend_lead.trend 
+-- as trend from tem_split left join tem_trend_lead on 
+-- tem_split.sale_date=tem_trend_lead.sale_date 
+-- and tem_split.province_id=tem_trend_lead.province_id 
+-- and tem_split.city_id=tem_trend_lead.city_id 
+-- and tem_split.brand_id=tem_trend_lead.brand_id 
+-- and tem_split.compartment=tem_trend_lead.compartment 
+-- and tem_split.department_id=tem_trend_lead.department_id 
+-- and tem_split.class_id=tem_trend_lead.class_id 
+-- and tem_split.displacement=tem_trend_lead.displacement 
+-- and tem_split.fuel_type_id=tem_trend_lead.fuel_type_id 
+-- and tem_split.if_mpv_id=tem_trend_lead.if_mpv_id 
+-- and tem_split.level_id=tem_trend_lead.level_id 
+-- and tem_split.type_id=tem_trend_lead.type_id;
+
+-- drop table if exists tem_trend_final_pro_1;
+-- create table tem_trend_final_pro_1 as select tem_trend_final_pro_0.sale_date ,tem_trend_final_pro_0.province_id ,tem_trend_final_pro_0.city_id ,tem_trend_final_pro_0.brand_id ,
+-- tem_trend_final_pro_0.class_id ,tem_trend_final_pro_0.compartment ,tem_trend_final_pro_0.department_id ,tem_trend_final_pro_0.displacement ,tem_trend_final_pro_0.fuel_type_id ,
+-- tem_trend_final_pro_0.if_mpv_id ,tem_trend_final_pro_0.level_id ,tem_trend_final_pro_0.type_id ,tem_trend_final_pro_0.sale_quantity ,tem_trend_final_pro_0.trend ,tem_trend_lead_1.trend 
+-- as trend_1 from tem_trend_final_pro_0 left join tem_trend_lead_1 on 
+-- tem_trend_final_pro_0.class_id=tem_trend_lead_1.class_id 
+-- and tem_trend_final_pro_0.sale_date=tem_trend_lead_1.sale_date 
+-- and tem_trend_final_pro_0.province_id=tem_trend_lead_1.province_id 
+-- and tem_trend_final_pro_0.city_id=tem_trend_lead_1.city_id 
+-- and tem_trend_final_pro_0.brand_id=tem_trend_lead_1.brand_id 
+-- and tem_trend_final_pro_0.compartment=tem_trend_lead_1.compartment 
+-- and tem_trend_final_pro_0.department_id=tem_trend_lead_1.department_id
+-- and tem_trend_final_pro_0.displacement=tem_trend_lead_1.displacement 
+-- and tem_trend_final_pro_0.fuel_type_id=tem_trend_lead_1.fuel_type_id 
+-- and tem_trend_final_pro_0.if_mpv_id=tem_trend_lead_1.if_mpv_id
+-- and tem_trend_final_pro_0.level_id=tem_trend_lead_1.level_id 
+-- and tem_trend_final_pro_0.type_id=tem_trend_lead_1.type_id;
+
+-- drop table if exists tem_trend_final_pro_2;
+-- create table tem_trend_final_pro_2 as select tem_trend_final_pro_1.sale_date ,tem_trend_final_pro_1.province_id ,tem_trend_final_pro_1.city_id ,tem_trend_final_pro_1.brand_id ,
+-- tem_trend_final_pro_1.class_id ,tem_trend_final_pro_1.compartment ,tem_trend_final_pro_1.department_id ,tem_trend_final_pro_1.displacement ,tem_trend_final_pro_1.fuel_type_id ,
+-- tem_trend_final_pro_1.if_mpv_id ,tem_trend_final_pro_1.level_id ,tem_trend_final_pro_1.type_id ,tem_trend_final_pro_1.sale_quantity ,tem_trend_final_pro_1.trend ,tem_trend_final_pro_1.trend_1 ,
+-- tem_trend_lead_2.trend as trend_2
+-- from tem_trend_final_pro_1 left join tem_trend_lead_2 on 
+-- tem_trend_final_pro_1.sale_date=tem_trend_lead_2.sale_date 
+-- and tem_trend_final_pro_1.province_id=tem_trend_lead_2.province_id 
+-- and tem_trend_final_pro_1.city_id=tem_trend_lead_2.city_id 
+-- and tem_trend_final_pro_1.class_id=tem_trend_lead_2.class_id
+-- and tem_trend_final_pro_1.brand_id=tem_trend_lead_2.brand_id 
+-- and tem_trend_final_pro_1.compartment=tem_trend_lead_2.compartment 
+-- and tem_trend_final_pro_1.department_id=tem_trend_lead_2.department_id 
+-- and tem_trend_final_pro_1.displacement=tem_trend_lead_2.displacement 
+-- and tem_trend_final_pro_1.fuel_type_id=tem_trend_lead_2.fuel_type_id 
+-- and tem_trend_final_pro_1.if_mpv_id=tem_trend_lead_2.if_mpv_id
+-- and tem_trend_final_pro_1.level_id=tem_trend_lead_2.level_id 
+-- and tem_trend_final_pro_1.type_id=tem_trend_lead_2.type_id ;
+
+-- drop table if exists tem_trend_final_pro_3;
+-- create table tem_trend_final_pro_3 as select tem_trend_final_pro_2.sale_date ,tem_trend_final_pro_2.province_id ,tem_trend_final_pro_2.city_id ,tem_trend_final_pro_2.brand_id ,
+-- tem_trend_final_pro_2.class_id ,tem_trend_final_pro_2.compartment ,tem_trend_final_pro_2.department_id ,tem_trend_final_pro_2.displacement ,tem_trend_final_pro_2.fuel_type_id ,
+-- tem_trend_final_pro_2.if_mpv_id ,tem_trend_final_pro_2.level_id ,tem_trend_final_pro_2.type_id ,tem_trend_final_pro_2.sale_quantity ,tem_trend_final_pro_2.trend ,
+-- tem_trend_final_pro_2.trend_1 ,tem_trend_final_pro_2.trend_2 ,tem_trend_lead_3.trend as trend_3
+-- from tem_trend_final_pro_2 left join tem_trend_lead_3 on 
+-- tem_trend_final_pro_2.sale_date=tem_trend_lead_3.sale_date 
+-- and tem_trend_final_pro_2.province_id=tem_trend_lead_3.province_id 
+-- and tem_trend_final_pro_2.city_id=tem_trend_lead_3.city_id 
+-- and tem_trend_final_pro_2.class_id=tem_trend_lead_3.class_id
+-- and tem_trend_final_pro_2.brand_id=tem_trend_lead_3.brand_id 
+-- and tem_trend_final_pro_2.compartment=tem_trend_lead_3.compartment 
+-- and tem_trend_final_pro_2.department_id=tem_trend_lead_3.department_id 
+-- and tem_trend_final_pro_2.displacement=tem_trend_lead_3.displacement 
+-- and tem_trend_final_pro_2.fuel_type_id=tem_trend_lead_3.fuel_type_id 
+-- and tem_trend_final_pro_2.if_mpv_id=tem_trend_lead_3.if_mpv_id 
+-- and tem_trend_final_pro_2.level_id=tem_trend_lead_3.level_id 
+-- and tem_trend_final_pro_2.type_id=tem_trend_lead_3.type_id ;
+
+
+-- drop table if exists tem_split_lead_1;
+-- drop table if exists tem_split_lead_2;
+-- drop table if exists tem_split_lead_3;
+
+
+-- drop table if exists tem_drop_trend_3_null;
+-- create table tem_drop_trend_3_null as select sale_date,province_id,city_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,trend,trend_1,trend_2,sale_quantity,
+-- trend_3 from tem_trend_final where trend is not null and trend_1 is not null and trend_2 is not null and trend_3 is not null;
+
+-- drop table if exists train_trend_3;
+-- create table train_trend_3 as select province_id,city_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,
+-- trend,trend_1,trend_2,trend_3 from tem_drop_trend_3_null where sale_date=201701;
+
+-- drop table if exists tem_trend_3_test;
+-- create table tem_trend_3_test as select province_id,city_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,trend as trend_1 ,trend_1 as trend_2,sale_quantity,
+-- trend_2 as trend_3 from tem_drop_trend_3_null where tem_drop_trend_3_null.sale_date = 201712;
+
+
+-- drop table if exists test_trend_3;
+-- create table test_trend_3 as select province_id,city_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_quantity,
+-- trend_1,trend_2,trend_3  from tem_trend_3_test;
+
+
+-- drop table if exists train_trend_3_enc;
+-- create table train_trend_3_enc as select 
+-- if(brand_id=2,1,0) as brand_id_2,
+-- if(brand_id=8,1,0) as brand_id_8,
+-- if(brand_id=10,1,0) as brand_id_10,
+-- if(brand_id=11,1,0) as brand_id_11,
+-- if(brand_id=13,1,0) as brand_id_13,
+-- if(brand_id=14,1,0) as brand_id_14,
+-- if(brand_id=15,1,0) as brand_id_15,
+-- if(brand_id=16,1,0) as brand_id_16,
+-- if(brand_id=17,1,0) as brand_id_17,
+-- if(brand_id=18,1,0) as brand_id_18,
+-- if(brand_id=21,1,0) as brand_id_21,
+-- if(brand_id=22,1,0) as brand_id_22,
+-- if(brand_id=23,1,0) as brand_id_23,
+-- if(brand_id=25,1,0) as brand_id_25,
+-- if(brand_id=27,1,0) as brand_id_27,
+-- if(brand_id=28,1,0) as brand_id_28,
+-- if(brand_id=29,1,0) as brand_id_29,
+-- if(brand_id=30,1,0) as brand_id_30,
+-- if(brand_id=31,1,0) as brand_id_31,
+-- if(brand_id=32,1,0) as brand_id_32,
+-- if(brand_id=34,1,0) as brand_id_34,
+-- if(brand_id=35,1,0) as brand_id_35,
+-- if(brand_id=36,1,0) as brand_id_36,
+-- if(brand_id=37,1,0) as brand_id_37,
+-- if(brand_id=38,1,0) as brand_id_38,
+-- if(brand_id=39,1,0) as brand_id_39,
+-- if(brand_id=42,1,0) as brand_id_42,
+-- if(brand_id=43,1,0) as brand_id_43,
+-- if(brand_id=46,1,0) as brand_id_46,
+-- if(brand_id=48,1,0) as brand_id_48,
+-- if(brand_id=49,1,0) as brand_id_49,
+-- if(brand_id=50,1,0) as brand_id_50,
+-- if(brand_id=52,1,0) as brand_id_52,
+-- if(brand_id=53,1,0) as brand_id_53,
+-- if(brand_id=55,1,0) as brand_id_55,
+-- if(brand_id=56,1,0) as brand_id_56,
+-- if(brand_id=57,1,0) as brand_id_57,
+-- if(brand_id=58,1,0) as brand_id_58,
+-- if(brand_id=59,1,0) as brand_id_59,
+-- if(brand_id=60,1,0) as brand_id_60,
+-- if(brand_id=63,1,0) as brand_id_63,
+-- if(brand_id=65,1,0) as brand_id_65,
+-- if(brand_id=66,1,0) as brand_id_66,
+-- if(brand_id=67,1,0) as brand_id_67,
+-- if(brand_id=68,1,0) as brand_id_68,
+-- if(brand_id=69,1,0) as brand_id_69,
+-- if(brand_id=77,1,0) as brand_id_77,
+-- if(brand_id=79,1,0) as brand_id_79,
+-- if(brand_id=80,1,0) as brand_id_80,
+-- if(brand_id=82,1,0) as brand_id_82,
+-- if(brand_id=83,1,0) as brand_id_83,
+-- if(brand_id=84,1,0) as brand_id_84,
+-- if(brand_id=86,1,0) as brand_id_86,
+-- if(brand_id=91,1,0) as brand_id_91,
+-- if(brand_id=94,1,0) as brand_id_94,
+-- if(brand_id=95,1,0) as brand_id_95,
+-- if(brand_id=98,1,0) as brand_id_98,
+-- if(brand_id=99,1,0) as brand_id_99,
+-- if(brand_id=100,1,0) as brand_id_100,
+-- if(brand_id=101,1,0) as brand_id_101,
+-- if(brand_id=102,1,0) as brand_id_102,
+-- if(brand_id=103,1,0) as brand_id_103,
+-- if(brand_id=104,1,0) as brand_id_104,
+-- if(brand_id=108,1,0) as brand_id_108,
+-- if(brand_id=109,1,0) as brand_id_109,
+-- if(brand_id=110,1,0) as brand_id_110,
+-- if(brand_id=117,1,0) as brand_id_117,
+-- if(brand_id=121,1,0) as brand_id_121,
+-- if(brand_id=122,1,0) as brand_id_122,
+-- if(brand_id=123,1,0) as brand_id_123,
+-- if(brand_id=125,1,0) as brand_id_125,
+-- if(brand_id=126,1,0) as brand_id_126,
+-- if(brand_id=127,1,0) as brand_id_127,
+-- if(brand_id=129,1,0) as brand_id_129,
+-- if(brand_id=130,1,0) as brand_id_130,
+-- if(brand_id=132,1,0) as brand_id_132,
+-- if(brand_id=133,1,0) as brand_id_133,
+-- if(brand_id=134,1,0) as brand_id_134,
+-- if(brand_id=135,1,0) as brand_id_135,
+-- if(brand_id=137,1,0) as brand_id_137,
+-- if(brand_id=138,1,0) as brand_id_138,
+-- if(brand_id=139,1,0) as brand_id_139,
+-- if(brand_id=140,1,0) as brand_id_140,
+-- if(brand_id=141,1,0) as brand_id_141,
+-- if(brand_id=142,1,0) as brand_id_142,
+-- if(brand_id=143,1,0) as brand_id_143,
+-- if(brand_id=145,1,0) as brand_id_145,
+-- if(brand_id=173,1,0) as brand_id_173,
+-- if(brand_id=185,1,0) as brand_id_185,
+-- if(brand_id=187,1,0) as brand_id_187,
+-- if(brand_id=221,1,0) as brand_id_221,
+-- if(brand_id=223,1,0) as brand_id_223,
+-- if(brand_id=225,1,0) as brand_id_225,
+-- if(brand_id=227,1,0) as brand_id_227,
+-- if(brand_id=229,1,0) as brand_id_229,
+-- if(brand_id=232,1,0) as brand_id_232,
+-- if(brand_id=235,1,0) as brand_id_235,
+-- if(brand_id=236,1,0) as brand_id_236,
+-- if(brand_id=237,1,0) as brand_id_237,
+-- if(brand_id=238,1,0) as brand_id_238,
+-- if(compartment=1,1,0) as compartment_1,
+-- if(compartment=2,1,0) as compartment_2,
+-- if(compartment=3,1,0) as compartment_3,
+-- if(department_id=0,1,0) as department_id_0,
+-- if(department_id=1,1,0) as department_id_1,
+-- if(department_id=2,1,0) as department_id_2,
+-- if(department_id=3,1,0) as department_id_3,
+-- if(department_id=4,1,0) as department_id_4,
+-- if(department_id=5,1,0) as department_id_5,
+-- if(displacement=0,1,0) as displacement_0,
+-- if(displacement=1,1,0) as displacement_1,
+-- if(fuel_type_id=0,1,0) as fuel_type_id_0,
+-- if(fuel_type_id=1,1,0) as fuel_type_id_1,
+-- if(fuel_type_id=2,1,0) as fuel_type_id_2,
+-- if(fuel_type_id=3,1,0) as fuel_type_id_3,
+-- if(fuel_type_id=4,1,0) as fuel_type_id_4,
+-- if(if_mpv_id=0,1,0) as if_mpv_id_0,
+-- if(if_mpv_id=1,1,0) as if_mpv_id_1,
+-- if(level_id=0,1,0) as level_id_0,
+-- if(level_id=1,1,0) as level_id_1,
+-- if(level_id=2,1,0) as level_id_2,
+-- if(level_id=3,1,0) as level_id_3,
+-- if(level_id=4,1,0) as level_id_4,
+-- if(level_id=5,1,0) as level_id_5,
+-- if(level_id=6,1,0) as level_id_6,
+-- if(level_id=7,1,0) as level_id_7,
+-- if(type_id=1,1,0) as type_id_1,
+-- if(type_id=2,1,0) as type_id_2,
+-- if(type_id=3,1,0) as type_id_3,
+-- if(type_id=4,1,0) as type_id_4,
+-- trend,
+-- trend_1,
+-- trend_2,
+-- trend_3
+-- from train_trend_3;
+
+
+-- drop table if exists test_trend_3_enc_new;
+-- create table test_trend_3_enc_new as select 
+-- if(brand_id=2,1,0) as brand_id_2,
+-- if(brand_id=8,1,0) as brand_id_8,
+-- if(brand_id=10,1,0) as brand_id_10,
+-- if(brand_id=11,1,0) as brand_id_11,
+-- if(brand_id=13,1,0) as brand_id_13,
+-- if(brand_id=14,1,0) as brand_id_14,
+-- if(brand_id=15,1,0) as brand_id_15,
+-- if(brand_id=16,1,0) as brand_id_16,
+-- if(brand_id=17,1,0) as brand_id_17,
+-- if(brand_id=18,1,0) as brand_id_18,
+-- if(brand_id=21,1,0) as brand_id_21,
+-- if(brand_id=22,1,0) as brand_id_22,
+-- if(brand_id=23,1,0) as brand_id_23,
+-- if(brand_id=25,1,0) as brand_id_25,
+-- if(brand_id=27,1,0) as brand_id_27,
+-- if(brand_id=28,1,0) as brand_id_28,
+-- if(brand_id=29,1,0) as brand_id_29,
+-- if(brand_id=30,1,0) as brand_id_30,
+-- if(brand_id=31,1,0) as brand_id_31,
+-- if(brand_id=32,1,0) as brand_id_32,
+-- if(brand_id=34,1,0) as brand_id_34,
+-- if(brand_id=35,1,0) as brand_id_35,
+-- if(brand_id=36,1,0) as brand_id_36,
+-- if(brand_id=37,1,0) as brand_id_37,
+-- if(brand_id=38,1,0) as brand_id_38,
+-- if(brand_id=39,1,0) as brand_id_39,
+-- if(brand_id=42,1,0) as brand_id_42,
+-- if(brand_id=43,1,0) as brand_id_43,
+-- if(brand_id=46,1,0) as brand_id_46,
+-- if(brand_id=48,1,0) as brand_id_48,
+-- if(brand_id=49,1,0) as brand_id_49,
+-- if(brand_id=50,1,0) as brand_id_50,
+-- if(brand_id=52,1,0) as brand_id_52,
+-- if(brand_id=53,1,0) as brand_id_53,
+-- if(brand_id=55,1,0) as brand_id_55,
+-- if(brand_id=56,1,0) as brand_id_56,
+-- if(brand_id=57,1,0) as brand_id_57,
+-- if(brand_id=58,1,0) as brand_id_58,
+-- if(brand_id=59,1,0) as brand_id_59,
+-- if(brand_id=60,1,0) as brand_id_60,
+-- if(brand_id=63,1,0) as brand_id_63,
+-- if(brand_id=65,1,0) as brand_id_65,
+-- if(brand_id=66,1,0) as brand_id_66,
+-- if(brand_id=67,1,0) as brand_id_67,
+-- if(brand_id=68,1,0) as brand_id_68,
+-- if(brand_id=69,1,0) as brand_id_69,
+-- if(brand_id=77,1,0) as brand_id_77,
+-- if(brand_id=79,1,0) as brand_id_79,
+-- if(brand_id=80,1,0) as brand_id_80,
+-- if(brand_id=82,1,0) as brand_id_82,
+-- if(brand_id=83,1,0) as brand_id_83,
+-- if(brand_id=84,1,0) as brand_id_84,
+-- if(brand_id=86,1,0) as brand_id_86,
+-- if(brand_id=91,1,0) as brand_id_91,
+-- if(brand_id=94,1,0) as brand_id_94,
+-- if(brand_id=95,1,0) as brand_id_95,
+-- if(brand_id=98,1,0) as brand_id_98,
+-- if(brand_id=99,1,0) as brand_id_99,
+-- if(brand_id=100,1,0) as brand_id_100,
+-- if(brand_id=101,1,0) as brand_id_101,
+-- if(brand_id=102,1,0) as brand_id_102,
+-- if(brand_id=103,1,0) as brand_id_103,
+-- if(brand_id=104,1,0) as brand_id_104,
+-- if(brand_id=108,1,0) as brand_id_108,
+-- if(brand_id=109,1,0) as brand_id_109,
+-- if(brand_id=110,1,0) as brand_id_110,
+-- if(brand_id=117,1,0) as brand_id_117,
+-- if(brand_id=121,1,0) as brand_id_121,
+-- if(brand_id=122,1,0) as brand_id_122,
+-- if(brand_id=123,1,0) as brand_id_123,
+-- if(brand_id=125,1,0) as brand_id_125,
+-- if(brand_id=126,1,0) as brand_id_126,
+-- if(brand_id=127,1,0) as brand_id_127,
+-- if(brand_id=129,1,0) as brand_id_129,
+-- if(brand_id=130,1,0) as brand_id_130,
+-- if(brand_id=132,1,0) as brand_id_132,
+-- if(brand_id=133,1,0) as brand_id_133,
+-- if(brand_id=134,1,0) as brand_id_134,
+-- if(brand_id=135,1,0) as brand_id_135,
+-- if(brand_id=137,1,0) as brand_id_137,
+-- if(brand_id=138,1,0) as brand_id_138,
+-- if(brand_id=139,1,0) as brand_id_139,
+-- if(brand_id=140,1,0) as brand_id_140,
+-- if(brand_id=141,1,0) as brand_id_141,
+-- if(brand_id=142,1,0) as brand_id_142,
+-- if(brand_id=143,1,0) as brand_id_143,
+-- if(brand_id=145,1,0) as brand_id_145,
+-- if(brand_id=173,1,0) as brand_id_173,
+-- if(brand_id=185,1,0) as brand_id_185,
+-- if(brand_id=187,1,0) as brand_id_187,
+-- if(brand_id=221,1,0) as brand_id_221,
+-- if(brand_id=223,1,0) as brand_id_223,
+-- if(brand_id=225,1,0) as brand_id_225,
+-- if(brand_id=227,1,0) as brand_id_227,
+-- if(brand_id=229,1,0) as brand_id_229,
+-- if(brand_id=232,1,0) as brand_id_232,
+-- if(brand_id=235,1,0) as brand_id_235,
+-- if(brand_id=236,1,0) as brand_id_236,
+-- if(brand_id=237,1,0) as brand_id_237,
+-- if(brand_id=238,1,0) as brand_id_238,
+-- if(compartment=1,1,0) as compartment_1,
+-- if(compartment=2,1,0) as compartment_2,
+-- if(compartment=3,1,0) as compartment_3,
+-- if(department_id=0,1,0) as department_id_0,
+-- if(department_id=1,1,0) as department_id_1,
+-- if(department_id=2,1,0) as department_id_2,
+-- if(department_id=3,1,0) as department_id_3,
+-- if(department_id=4,1,0) as department_id_4,
+-- if(department_id=5,1,0) as department_id_5,
+-- if(displacement=0,1,0) as displacement_0,
+-- if(displacement=1,1,0) as displacement_1,
+-- if(fuel_type_id=0,1,0) as fuel_type_id_0,
+-- if(fuel_type_id=1,1,0) as fuel_type_id_1,
+-- if(fuel_type_id=2,1,0) as fuel_type_id_2,
+-- if(fuel_type_id=3,1,0) as fuel_type_id_3,
+-- if(fuel_type_id=4,1,0) as fuel_type_id_4,
+-- if(if_mpv_id=0,1,0) as if_mpv_id_0,
+-- if(if_mpv_id=1,1,0) as if_mpv_id_1,
+-- if(level_id=0,1,0) as level_id_0,
+-- if(level_id=1,1,0) as level_id_1,
+-- if(level_id=2,1,0) as level_id_2,
+-- if(level_id=3,1,0) as level_id_3,
+-- if(level_id=4,1,0) as level_id_4,
+-- if(level_id=5,1,0) as level_id_5,
+-- if(level_id=6,1,0) as level_id_6,
+-- if(level_id=7,1,0) as level_id_7,
+-- if(type_id=1,1,0) as type_id_1,
+-- if(type_id=2,1,0) as type_id_2,
+-- if(type_id=3,1,0) as type_id_3,
+-- if(type_id=4,1,0) as type_id_4,
+-- trend_1,
+-- trend_2,
+-- trend_3,
+-- province_id,
+-- city_id,
+-- class_id,
+-- brand_id,
+-- type_id,
+-- level_id,
+-- department_id,
+-- if_mpv_id,
+-- displacement,
+-- compartment,
+-- fuel_type_id,
+-- sale_quantity
+-- from test_trend_3;
+
+
+
+-- drop table if exists xgb_pred_3_only_01;
+-- DROP OFFLINEMODEL IF EXISTS xgboost_3_only_01;
+
+-- -- train
+-- PAI
+-- -name xgboost
+-- -project algo_public
+-- -Deta="0.1"
+-- -Dobjective="reg:linear"
+-- -DitemDelimiter=","
+-- -Dseed="0"
+-- -Dnum_round="500"
+-- -DlabelColName="trend"
+-- -DinputTableName="train_trend_3_enc"
+-- -DenableSparse="false"
+-- -Dmax_depth="10"
+-- -Dsubsample="0.7"
+-- -Dcolsample_bytree="0.7"
+-- -DmodelName="xgboost_3_only_01"
+-- -DfeatureColNames="brand_id_2,brand_id_8,brand_id_10,brand_id_11,brand_id_13,brand_id_14,brand_id_15,brand_id_16,brand_id_17,brand_id_18,brand_id_21,brand_id_22,brand_id_23,brand_id_25,brand_id_27,brand_id_28,brand_id_29,brand_id_30,brand_id_31,brand_id_32,brand_id_34,brand_id_35,brand_id_36,brand_id_37,brand_id_38,brand_id_39,brand_id_42,brand_id_43,brand_id_46,brand_id_48,brand_id_49,brand_id_50,brand_id_52,brand_id_53,brand_id_55,brand_id_56,brand_id_57,brand_id_58,brand_id_59,brand_id_60,brand_id_63,brand_id_65,brand_id_66,brand_id_67,brand_id_68,brand_id_69,brand_id_77,brand_id_79,brand_id_80,brand_id_82,brand_id_83,brand_id_84,brand_id_86,brand_id_91,brand_id_94,brand_id_95,brand_id_98,brand_id_99,brand_id_100,brand_id_101,brand_id_102,brand_id_103,brand_id_104,brand_id_108,brand_id_109,brand_id_110,brand_id_117,brand_id_121,brand_id_122,brand_id_123,brand_id_125,brand_id_126,brand_id_127,brand_id_129,brand_id_130,brand_id_132,brand_id_133,brand_id_134,brand_id_135,brand_id_137,brand_id_138,brand_id_139,brand_id_140,brand_id_141,brand_id_142,brand_id_143,brand_id_145,brand_id_173,brand_id_185,brand_id_187,brand_id_221,brand_id_223,brand_id_225,brand_id_227,brand_id_229,brand_id_232,brand_id_235,brand_id_236,brand_id_237,brand_id_238,compartment_1,compartment_2,compartment_3,department_id_0,department_id_1,department_id_2,department_id_3,department_id_4,department_id_5,displacement_0,displacement_1,fuel_type_id_0,fuel_type_id_1,fuel_type_id_2,fuel_type_id_3,fuel_type_id_4,if_mpv_id_0,if_mpv_id_1,level_id_0,level_id_1,level_id_2,level_id_3,level_id_4,level_id_5,level_id_6,level_id_7,type_id_1,type_id_2,type_id_3,type_id_4,trend_1,trend_2,trend_3"
+-- -Dgamma="0"
+-- -Dlambda="50" 
+-- -DkvDelimiter=":";
+
+-- -- predict
+-- PAI
+-- -name prediction
+-- -project algo_public
+-- -DdetailColName="trend"
+-- -DappendColNames="city_id,province_id,class_id,brand_id,type_id,level_id,department_id,if_mpv_id,displacement,compartment,fuel_type_id,sale_quantity"
+-- -DmodelName="xgboost_3_only_01"
+-- -DitemDelimiter=","
+-- -DresultColName="prediction_result"
+-- -Dlifecycle="28"
+-- -DoutputTableName="xgb_pred_3_only_01"
+-- -DscoreColName="prediction_score"
+-- -DkvDelimiter=":"
+-- -DinputTableName="test_trend_3_enc_new"
+-- -DfeatureColNames="brand_id_2,brand_id_8,brand_id_10,brand_id_11,brand_id_13,brand_id_14,brand_id_15,brand_id_16,brand_id_17,brand_id_18,brand_id_21,brand_id_22,brand_id_23,brand_id_25,brand_id_27,brand_id_28,brand_id_29,brand_id_30,brand_id_31,brand_id_32,brand_id_34,brand_id_35,brand_id_36,brand_id_37,brand_id_38,brand_id_39,brand_id_42,brand_id_43,brand_id_46,brand_id_48,brand_id_49,brand_id_50,brand_id_52,brand_id_53,brand_id_55,brand_id_56,brand_id_57,brand_id_58,brand_id_59,brand_id_60,brand_id_63,brand_id_65,brand_id_66,brand_id_67,brand_id_68,brand_id_69,brand_id_77,brand_id_79,brand_id_80,brand_id_82,brand_id_83,brand_id_84,brand_id_86,brand_id_91,brand_id_94,brand_id_95,brand_id_98,brand_id_99,brand_id_100,brand_id_101,brand_id_102,brand_id_103,brand_id_104,brand_id_108,brand_id_109,brand_id_110,brand_id_117,brand_id_121,brand_id_122,brand_id_123,brand_id_125,brand_id_126,brand_id_127,brand_id_129,brand_id_130,brand_id_132,brand_id_133,brand_id_134,brand_id_135,brand_id_137,brand_id_138,brand_id_139,brand_id_140,brand_id_141,brand_id_142,brand_id_143,brand_id_145,brand_id_173,brand_id_185,brand_id_187,brand_id_221,brand_id_223,brand_id_225,brand_id_227,brand_id_229,brand_id_232,brand_id_235,brand_id_236,brand_id_237,brand_id_238,compartment_1,compartment_2,compartment_3,department_id_0,department_id_1,department_id_2,department_id_3,department_id_4,department_id_5,displacement_0,displacement_1,fuel_type_id_0,fuel_type_id_1,fuel_type_id_2,fuel_type_id_3,fuel_type_id_4,if_mpv_id_0,if_mpv_id_1,level_id_0,level_id_1,level_id_2,level_id_3,level_id_4,level_id_5,level_id_6,level_id_7,type_id_1,type_id_2,type_id_3,type_id_4,trend_1,trend_2,trend_3"
+-- -DenableSparse="false";
+
+
+
+-- drop table if exists predict_final_pro;
+-- create table predict_final_pro as select province_id,city_id,class_id,if(prediction_result<(-0.33),(1-0.33)*sale_quantity/(1+0.33),if(prediction_result>0.33,(1+0.33)*sale_quantity/(1-0.33),
+-- (1+prediction_result)*sale_quantity/(1-prediction_result))) as predict_number from xgb_pred_3_only_01;
+
+-- drop table if exists predict_final;
+-- create table predict_final as select province_id,city_id,class_id,sum(predict_number) as predict_number from predict_final_pro group by province_id,city_id,class_id;
+
+-- drop table if exists result_pro;
+-- create table result_pro as select yc_result_sample_a.predict_date,yc_result_sample_a.province_id,yc_result_sample_a.city_id,yc_result_sample_a.class_id,
+-- if(predict_number is not null,predict_number,predict_quantity) as predict_number from
+-- yc_result_sample_a left join predict_final on yc_result_sample_a.province_id=predict_final.province_id and yc_result_sample_a.city_id=predict_final.city_id and 
+-- yc_result_sample_a.class_id=predict_final.class_id;
+
+-- drop table if exists yc_result_submit_a;
+-- create table yc_result_submit_a as select result_pro.predict_date,result_pro.province_id,result_pro.city_id,result_pro.class_id,if(predict_number is null or predict_number<0,predict_quantity,predict_number) as 
+-- predict_quantity from result_pro left join baseline on result_pro.province_id=baseline.province_id and result_pro.city_id=baseline.city_id and result_pro.class_id=baseline.class_id;
+-- drop table if exists result_pro;
